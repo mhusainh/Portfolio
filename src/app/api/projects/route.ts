@@ -20,6 +20,16 @@ export async function GET(request: Request) {
             type: true,
           },
         },
+        achievements: {
+          select: {
+            id: true,
+            title_en: true,
+            title_id: true,
+            issuer: true,
+            certificate_url: true,
+            credential_url: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -50,6 +60,20 @@ export async function POST(request: Request) {
       },
     });
 
+    // If achievement_ids provided (array or comma-separated), link them to this project
+    const achievementIds: string[] = Array.isArray(body.achievement_ids)
+      ? body.achievement_ids
+      : body.achievement_id
+      ? [body.achievement_id]
+      : [];
+
+    if (achievementIds.length > 0) {
+      await prisma.achievements.updateMany({
+        where: { id: { in: achievementIds } },
+        data: { project_id: created.id },
+      });
+    }
+
     return NextResponse.json(created, { status: 201 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Failed to create project";
@@ -60,7 +84,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, ...data } = body;
+    const { id, achievement_ids, achievement_id, ...data } = body;
     if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
 
     const updated = await prisma.project.update({
@@ -79,6 +103,32 @@ export async function PUT(request: Request) {
         isFeatured: Boolean(data.isFeatured),
       },
     });
+
+    // Unlink old achievements not in list, and link selected ones
+    if (achievement_ids !== undefined || achievement_id !== undefined) {
+      const targetIds: string[] = Array.isArray(achievement_ids)
+        ? achievement_ids
+        : achievement_id
+        ? [achievement_id]
+        : [];
+
+      // Disconnect achievements that were linked to this project but not in targetIds
+      await prisma.achievements.updateMany({
+        where: {
+          project_id: id,
+          id: { notIn: targetIds },
+        },
+        data: { project_id: null },
+      });
+
+      // Connect selected achievements
+      if (targetIds.length > 0) {
+        await prisma.achievements.updateMany({
+          where: { id: { in: targetIds } },
+          data: { project_id: id },
+        });
+      }
+    }
 
     return NextResponse.json(updated);
   } catch (error: unknown) {

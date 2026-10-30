@@ -191,11 +191,16 @@ export default function AdminDashboardPage() {
     project_url: "",
     repository_url: "",
     experience_id: "",
+    achievement_ids: [] as string[],
     isFeatured: true,
   });
 
   const handleStartEditProj = (proj: any) => {
     setEditingProjId(proj.id);
+    const linkedAchIds = Array.isArray(proj.achievements)
+      ? proj.achievements.map((a: any) => a.id)
+      : achievements.filter((a: any) => a.project_id === proj.id).map((a: any) => a.id);
+
     setNewProj({
       title: proj.title,
       slug: proj.slug,
@@ -207,6 +212,7 @@ export default function AdminDashboardPage() {
       project_url: proj.project_url || "",
       repository_url: proj.repository_url || "",
       experience_id: proj.experience_id || "",
+      achievement_ids: linkedAchIds,
       isFeatured: Boolean(proj.isFeatured),
     });
     window.scrollTo({ top: 120, behavior: "smooth" });
@@ -225,6 +231,7 @@ export default function AdminDashboardPage() {
       project_url: "",
       repository_url: "",
       experience_id: "",
+      achievement_ids: [],
       isFeatured: true,
     });
   };
@@ -327,7 +334,6 @@ export default function AdminDashboardPage() {
     issue_date: new Date().toISOString().split("T")[0],
     description_en: "",
     description_id: "",
-    project_id: "",
     certificate_url: "",
     credential_url: "",
   });
@@ -341,7 +347,6 @@ export default function AdminDashboardPage() {
       issue_date: ach.issue_date ? ach.issue_date.split("T")[0] : "",
       description_en: ach.description_en || "",
       description_id: ach.description_id || "",
-      project_id: ach.project_id || "",
       certificate_url: ach.certificate_url || "",
       credential_url: ach.credential_url || "",
     });
@@ -357,7 +362,6 @@ export default function AdminDashboardPage() {
       issue_date: new Date().toISOString().split("T")[0],
       description_en: "",
       description_id: "",
-      project_id: "",
       certificate_url: "",
       credential_url: "",
     });
@@ -367,7 +371,6 @@ export default function AdminDashboardPage() {
     e.preventDefault();
     const payload = {
       ...newAch,
-      project_id: newAch.project_id || null,
       id: editingAchId || undefined,
     };
 
@@ -1025,6 +1028,55 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
+              {/* Hubungkan dengan Prestasi / Sertifikat yang sudah ada (Opsional) */}
+              <div className="p-4 bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-lg flex flex-col gap-2">
+                <label className="block text-xs font-mono font-bold uppercase text-black dark:text-white">
+                  🏆 HUBUNGKAN PRESTASI / SERTIFIKAT TERKAIT PROYEK INI (OPSIONAL)
+                </label>
+                <p className="text-[11px] text-gray-600 dark:text-gray-300 font-mono">
+                  Pilih sertifikat / penghargaan yang kamu dapatkan dari hasil pengerjaan proyek ini:
+                </p>
+                {achievements.length === 0 ? (
+                  <span className="text-xs italic text-gray-400">Belum ada data prestasi. Kamu bisa buat prestasi dulu di tab Prestasi & Sertifikat.</span>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                    {achievements.map((ach) => {
+                      const isChecked = newProj.achievement_ids.includes(ach.id);
+                      return (
+                        <label
+                          key={ach.id}
+                          className={`flex items-start gap-2.5 p-2.5 border-2 rounded-md cursor-pointer transition-colors text-xs font-mono ${
+                            isChecked
+                              ? "bg-[#E2FF00]/20 border-black dark:border-white shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF]"
+                              : "border-black/30 dark:border-white/30 hover:border-black dark:hover:border-white"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setNewProj({ ...newProj, achievement_ids: [...newProj.achievement_ids, ach.id] });
+                              } else {
+                                setNewProj({
+                                  ...newProj,
+                                  achievement_ids: newProj.achievement_ids.filter((id) => id !== ach.id),
+                                });
+                              }
+                            }}
+                            className="mt-0.5 accent-[#635BFF]"
+                          />
+                          <div>
+                            <span className="font-bold block text-black dark:text-white">{ach.title_id || ach.title_en}</span>
+                            <span className="text-[10px] text-gray-500 block">{ach.issuer}</span>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-2">
                 <button
                   type="submit"
@@ -1182,28 +1234,6 @@ export default function AdminDashboardPage() {
                   onChange={(val) => setNewAch({ ...newAch, description_id: val })}
                   placeholder="Ceritakan tentang penghargaan ini (opsional)..."
                 />
-              </div>
-
-              {/* Link ke Project (Opsional) */}
-              <div>
-                <label className="block text-xs font-mono font-bold mb-1">
-                  HUBUNGKAN DENGAN PROYEK TERKAIT (OPSIONAL)
-                </label>
-                <select
-                  value={newAch.project_id}
-                  onChange={(e) => setNewAch({ ...newAch, project_id: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white"
-                >
-                  <option value="">-- Tidak Terhubung ke Proyek Tertentu (Mandiri) --</option>
-                  {projects.map((proj) => (
-                    <option key={proj.id} value={proj.id}>
-                      {proj.title}
-                    </option>
-                  ))}
-                </select>
-                <span className="text-[10px] text-gray-500 font-mono mt-0.5 block">
-                  Jika prestasi/sertifikat ini didapat dari hasil pengerjaan proyek tertentu, pilih proyek di atas.
-                </span>
               </div>
 
               <div>

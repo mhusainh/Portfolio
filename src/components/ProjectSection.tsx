@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useLanguage } from "@/context/LanguageContext";
-import { X, ExternalLink, Code2, ChevronRight, ChevronLeft, Calendar } from "lucide-react";
+import { X, ExternalLink, Code2, ChevronRight, ChevronLeft, Calendar, Trophy } from "lucide-react";
 import { NeoStamp, getTechColor } from "@/components/NeoBrutalAssets";
 import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 
@@ -25,6 +25,14 @@ export interface ProjectItem {
     role_en: string;
     role_id: string;
   } | null;
+  achievements?: {
+    id: string;
+    title_en: string;
+    title_id: string;
+    issuer: string;
+    certificate_url?: string | null;
+    credential_url?: string | null;
+  }[];
 }
 
 interface ProjectSectionProps {
@@ -125,7 +133,7 @@ export function ProjectSection({
 
                 <div>
                   {/* Tech Tags with Consistent Palette Colors */}
-                  <div className="flex flex-wrap gap-1.5 mb-4">
+                  <div className="flex flex-wrap gap-1.5 mb-3">
                     {proj.technologies.map((t) => (
                       <span
                         key={t}
@@ -135,6 +143,25 @@ export function ProjectSection({
                       </span>
                     ))}
                   </div>
+
+                  {/* Optional Achievements Linked to this Project */}
+                  {proj.achievements && proj.achievements.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-4">
+                      {proj.achievements.map((ach) => (
+                        <a
+                          key={ach.id}
+                          href="#achievements"
+                          className="inline-flex items-center gap-1 text-[11px] font-mono font-bold px-2 py-0.5 bg-[#9D93FF] text-black border border-black rounded shadow-[1px_1px_0px_0px_#000] neo-lift-hover"
+                          title={`${ach.issuer}: ${locale === "en" ? ach.title_en : ach.title_id}`}
+                        >
+                          <Trophy className="w-3 h-3 text-black" />
+                          <span className="truncate max-w-[200px]">
+                            {locale === "en" ? ach.title_en : ach.title_id}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Buttons with Lift Animation */}
                   <div className="flex items-center gap-2 pt-2 border-t-2 border-black dark:border-white">
@@ -266,7 +293,7 @@ export function ProjectSection({
                 </div>
 
                 {/* Tech Badges in Modal with Consistent Palette */}
-                <div className="flex flex-wrap gap-2 mb-6">
+                <div className="flex flex-wrap gap-2 mb-4">
                   {selectedProject.technologies.map((tech) => (
                     <span
                       key={tech}
@@ -276,6 +303,35 @@ export function ProjectSection({
                     </span>
                   ))}
                 </div>
+
+                {/* Achievements In Modal if Any */}
+                {selectedProject.achievements && selectedProject.achievements.length > 0 && (
+                  <div className="mb-6 p-3 bg-[#9D93FF]/20 border-2 border-black dark:border-white rounded-lg">
+                    <span className="text-xs font-mono font-bold uppercase text-black dark:text-white block mb-2 flex items-center gap-1.5">
+                      <Trophy className="w-4 h-4 text-[#635BFF] dark:text-[#9D93FF]" />
+                      <span>Prestasi & Penghargaan Terkait Proyek:</span>
+                    </span>
+                    <div className="flex flex-col gap-1.5">
+                      {selectedProject.achievements.map((ach) => (
+                        <div key={ach.id} className="text-xs font-mono flex items-center justify-between gap-2">
+                          <span className="font-bold text-black dark:text-white">
+                            • {locale === "en" ? ach.title_en : ach.title_id} ({ach.issuer})
+                          </span>
+                          {(ach.credential_url || ach.certificate_url) && (
+                            <a
+                              href={ach.credential_url || ach.certificate_url!}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[11px] underline text-[#635BFF] dark:text-[#9D93FF] font-bold"
+                            >
+                              Lihat Piagam
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Action Links (Only rendered when URLs exist) */}
                 {(Boolean(selectedProject.project_url && selectedProject.project_url.trim().length > 0) ||
