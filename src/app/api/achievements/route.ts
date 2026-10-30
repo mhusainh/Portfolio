@@ -10,6 +10,17 @@ export async function GET(request: Request) {
 
     const achievements = await prisma.achievements.findMany({
       where: featured === "true" ? { is_featured: true } : undefined,
+      include: {
+        project: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            cover_image_url: true,
+            technologies: true,
+          },
+        },
+      },
       orderBy: [{ display_order: "asc" }, { issue_date: "desc" }],
     });
 
@@ -25,16 +36,28 @@ export async function POST(request: Request) {
     const body = await request.json();
     const created = await prisma.achievements.create({
       data: {
+        project_id: body.project_id || null,
         title_en: body.title_en,
         title_id: body.title_id,
         issuer: body.issuer,
         issue_date: new Date(body.issue_date),
-        description_en: body.description_en,
-        description_id: body.description_id,
+        description_en: body.description_en || null,
+        description_id: body.description_id || null,
         certificate_url: body.certificate_url || null,
         credential_url: body.credential_url || null,
         is_featured: Boolean(body.is_featured ?? true),
         display_order: Number(body.display_order) || 0,
+      },
+      include: {
+        project: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            cover_image_url: true,
+            technologies: true,
+          },
+        },
       },
     });
 
@@ -54,16 +77,28 @@ export async function PUT(request: Request) {
     const updated = await prisma.achievements.update({
       where: { id },
       data: {
+        project_id: data.project_id || null,
         title_en: data.title_en,
         title_id: data.title_id,
         issuer: data.issuer,
         issue_date: new Date(data.issue_date),
-        description_en: data.description_en,
-        description_id: data.description_id,
+        description_en: data.description_en || null,
+        description_id: data.description_id || null,
         certificate_url: data.certificate_url || null,
         credential_url: data.credential_url || null,
         is_featured: Boolean(data.is_featured ?? true),
         display_order: Number(data.display_order) || 0,
+      },
+      include: {
+        project: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            cover_image_url: true,
+            technologies: true,
+          },
+        },
       },
     });
 

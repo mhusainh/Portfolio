@@ -5,6 +5,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { FileText, Mail, ArrowDownRight } from "lucide-react";
 import { NeoStarburst } from "@/components/NeoBrutalAssets";
 import { ProfileCard } from "@/components/ProfileCard";
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 
 interface HeroProps {
   profile: {
@@ -48,9 +49,11 @@ export function Hero({ profile }: HeroProps) {
           </div>
 
           {/* Bio Paragraph (Justified) */}
-          <p className="text-base md:text-lg text-black/90 dark:text-[#FFFFFF]/90 max-w-[65ch] leading-relaxed border-l-4 border-[#635BFF] dark:border-[#9D93FF] pl-4 py-1 text-justify">
-            {bio || "Dedicated software developer building clean, scalable backend systems and high-craft web applications."}
-          </p>
+          <div className="text-base md:text-lg text-black/90 dark:text-[#FFFFFF]/90 max-w-[65ch] leading-relaxed border-l-4 border-[#635BFF] dark:border-[#9D93FF] pl-4 py-1 text-justify">
+            <MarkdownRenderer
+              content={bio || "Dedicated software developer building clean, scalable backend systems and high-craft web applications."}
+            />
+          </div>
 
           {/* Action CTAs in Requested Sequence: Let's Talk -> Resume -> Explore Work */}
           <div className="flex flex-wrap gap-3 pt-2">

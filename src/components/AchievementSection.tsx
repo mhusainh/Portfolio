@@ -2,11 +2,13 @@
 
 import React from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import { Trophy, Calendar, ExternalLink, Award } from "lucide-react";
+import { Trophy, Calendar, ExternalLink, Award, FolderGit2 } from "lucide-react";
 import { NeoStamp } from "@/components/NeoBrutalAssets";
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 
 export interface AchievementItem {
   id: string;
+  project_id?: string | null;
   title_en: string;
   title_id: string;
   issuer: string;
@@ -17,6 +19,13 @@ export interface AchievementItem {
   credential_url?: string | null;
   is_featured?: boolean | null;
   display_order?: number | null;
+  project?: {
+    id: string;
+    title: string;
+    slug: string;
+    cover_image_url: string;
+    technologies: string[];
+  } | null;
 }
 
 export function AchievementSection({ achievements }: { achievements: AchievementItem[] }) {
@@ -94,9 +103,22 @@ export function AchievementSection({ achievements }: { achievements: Achievement
                 </h4>
 
                 {desc && (
-                  <p className="text-sm text-black/85 dark:text-[#FFFFFF]/85 leading-relaxed mb-4">
-                    {desc}
-                  </p>
+                  <div className="text-sm text-black/85 dark:text-[#FFFFFF]/85 leading-relaxed mb-4">
+                    <MarkdownRenderer content={desc} />
+                  </div>
+                )}
+
+                {/* Optional Linked Project Badge */}
+                {item.project && (
+                  <div className="mb-4 pt-2 border-t border-black/10 dark:border-white/10">
+                    <a
+                      href="#projects"
+                      className="inline-flex items-center gap-1.5 text-xs font-mono font-bold px-2.5 py-1 bg-[#E2FF00] text-black border-2 border-black dark:border-white rounded-md shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF] neo-lift-hover"
+                    >
+                      <FolderGit2 className="w-3.5 h-3.5 text-black" />
+                      <span>Proyek: {item.project.title}</span>
+                    </a>
+                  </div>
                 )}
               </div>
 

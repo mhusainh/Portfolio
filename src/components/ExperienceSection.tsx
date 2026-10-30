@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { Briefcase, Calendar, MapPin, ExternalLink, Layers } from "lucide-react";
 import { NeoStamp, getTechColor } from "@/components/NeoBrutalAssets";
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 
 export interface ExperienceItem {
   id: string;
@@ -136,9 +137,9 @@ export function ExperienceSection({ experiences, onSelectProject }: ExperienceSe
                   </div>
                 </div>
 
-                <p className="text-sm md:text-base text-black/90 dark:text-[#FFFFFF]/90 leading-relaxed mb-4">
-                  {desc}
-                </p>
+                <div className="text-sm md:text-base text-black/90 dark:text-[#FFFFFF]/90 leading-relaxed mb-4">
+                  <MarkdownRenderer content={desc} />
+                </div>
 
                 {/* Tech Chips with Consistent Palette Colors */}
                 {item.technologies && item.technologies.length > 0 && (

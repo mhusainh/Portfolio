@@ -44,6 +44,7 @@ model Education {
   scoreGpa       String?   @map("score_gpa") @db.VarChar(50)
   createdAt      DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
 
+  @@index([isCurrent(sort: Desc), startDate(sort: Desc)], map: "idx_education_dates")
   @@map("education")
 }
 
@@ -57,6 +58,7 @@ model Skill {
   display_order     Int?            @default(0)
   createdAt         DateTime?       @default(now()) @map("created_at") @db.Timestamptz(6)
 
+  @@index([display_order, name], map: "idx_skills_order")
   @@map("skills")
 }
 
@@ -76,7 +78,10 @@ model Project {
   createdAt       DateTime?    @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime?    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   experiences     experiences? @relation(fields: [experience_id], references: [id], onUpdate: NoAction)
+  achievements    achievements[]
 
+  @@index([createdAt(sort: Desc)], map: "idx_projects_created_at")
+  @@index([experience_id], map: "idx_projects_experience_id")
   @@map("projects")
 }
 
@@ -98,10 +103,13 @@ model experiences {
   created_at        DateTime?       @default(now()) @db.Timestamptz(6)
   updated_at        DateTime?       @default(now()) @db.Timestamptz(6)
   projects          Project[]
+
+  @@index([is_current(sort: Desc), start_date(sort: Desc)], map: "idx_experiences_dates")
 }
 
 model achievements {
   id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id      String?   @db.Uuid
   title_en        String    @db.VarChar(255)
   title_id        String    @db.VarChar(255)
   issuer          String    @db.VarChar(255)
@@ -113,6 +121,10 @@ model achievements {
   is_featured     Boolean?  @default(true)
   display_order   Int?      @default(0)
   created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  project         Project?  @relation(fields: [project_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([display_order, issue_date(sort: Desc)], map: "idx_achievements_order")
+  @@index([project_id], map: "idx_achievements_project_id")
 }
 
 model admin_users {

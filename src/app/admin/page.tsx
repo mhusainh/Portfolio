@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-client";
 import { MediaUploader } from "@/components/admin/MediaUploader";
 import { SmartIconChecker } from "@/components/admin/SmartIconChecker";
+import { MarkdownEditor } from "@/components/admin/MarkdownEditor";
 import {
   User,
   Briefcase,
@@ -326,6 +327,7 @@ export default function AdminDashboardPage() {
     issue_date: new Date().toISOString().split("T")[0],
     description_en: "",
     description_id: "",
+    project_id: "",
     certificate_url: "",
     credential_url: "",
   });
@@ -339,6 +341,7 @@ export default function AdminDashboardPage() {
       issue_date: ach.issue_date ? ach.issue_date.split("T")[0] : "",
       description_en: ach.description_en || "",
       description_id: ach.description_id || "",
+      project_id: ach.project_id || "",
       certificate_url: ach.certificate_url || "",
       credential_url: ach.credential_url || "",
     });
@@ -354,6 +357,7 @@ export default function AdminDashboardPage() {
       issue_date: new Date().toISOString().split("T")[0],
       description_en: "",
       description_id: "",
+      project_id: "",
       certificate_url: "",
       credential_url: "",
     });
@@ -363,6 +367,7 @@ export default function AdminDashboardPage() {
     e.preventDefault();
     const payload = {
       ...newAch,
+      project_id: newAch.project_id || null,
       id: editingAchId || undefined,
     };
 
@@ -588,23 +593,18 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-mono font-bold mb-1">BIODATA DESKRIPSI (EN)</label>
-              <textarea
-                rows={3}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <MarkdownEditor
+                label="BIODATA DESKRIPSI (EN)"
                 value={profile.bio_en || ""}
-                onChange={(e) => setProfile({ ...profile, bio_en: e.target.value })}
-                className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-sm font-mono text-black dark:text-white"
+                onChange={(val) => setProfile({ ...profile, bio_en: val })}
+                rows={4}
               />
-            </div>
-
-            <div>
-              <label className="block text-xs font-mono font-bold mb-1">BIODATA DESKRIPSI (ID)</label>
-              <textarea
-                rows={3}
+              <MarkdownEditor
+                label="BIODATA DESKRIPSI (ID)"
                 value={profile.bio_id || ""}
-                onChange={(e) => setProfile({ ...profile, bio_id: e.target.value })}
-                className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-sm font-mono text-black dark:text-white"
+                onChange={(val) => setProfile({ ...profile, bio_id: val })}
+                rows={4}
               />
             </div>
 
@@ -760,27 +760,20 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-mono font-bold mb-1">DESKRIPSI (EN)</label>
-                  <textarea
-                    rows={2}
-                    required
-                    value={newExp.description_en}
-                    onChange={(e) => setNewExp({ ...newExp, description_en: e.target.value })}
-                    className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono font-bold mb-1">DESKRIPSI (ID)</label>
-                  <textarea
-                    rows={2}
-                    required
-                    value={newExp.description_id}
-                    onChange={(e) => setNewExp({ ...newExp, description_id: e.target.value })}
-                    className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white"
-                  />
-                </div>
+                <MarkdownEditor
+                  label="DESKRIPSI PENGALAMAN (EN)"
+                  required
+                  rows={4}
+                  value={newExp.description_en}
+                  onChange={(val) => setNewExp({ ...newExp, description_en: val })}
+                />
+                <MarkdownEditor
+                  label="DESKRIPSI PENGALAMAN (ID)"
+                  required
+                  rows={4}
+                  value={newExp.description_id}
+                  onChange={(val) => setNewExp({ ...newExp, description_id: val })}
+                />
               </div>
 
               <div>
@@ -909,27 +902,20 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-mono font-bold mb-1">DESKRIPSI (EN)</label>
-                  <textarea
-                    rows={2}
-                    required
-                    value={newProj.description_en}
-                    onChange={(e) => setNewProj({ ...newProj, description_en: e.target.value })}
-                    className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono font-bold mb-1">DESKRIPSI (ID)</label>
-                  <textarea
-                    rows={2}
-                    required
-                    value={newProj.description_id}
-                    onChange={(e) => setNewProj({ ...newProj, description_id: e.target.value })}
-                    className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white"
-                  />
-                </div>
+                <MarkdownEditor
+                  label="DESKRIPSI PROYEK (EN)"
+                  required
+                  rows={4}
+                  value={newProj.description_en}
+                  onChange={(val) => setNewProj({ ...newProj, description_en: val })}
+                />
+                <MarkdownEditor
+                  label="DESKRIPSI PROYEK (ID)"
+                  required
+                  rows={4}
+                  value={newProj.description_id}
+                  onChange={(val) => setNewProj({ ...newProj, description_id: val })}
+                />
               </div>
 
               {/* Cloudinary Multi-Photo Upload & Cover Setter */}
@@ -1180,6 +1166,46 @@ export default function AdminDashboardPage() {
                 )}
               </div>
 
+              {/* Deskripsi Markdown ID & EN */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <MarkdownEditor
+                  label="DESKRIPSI PRESTASI (EN)"
+                  rows={3}
+                  value={newAch.description_en}
+                  onChange={(val) => setNewAch({ ...newAch, description_en: val })}
+                  placeholder="Ceritakan tentang penghargaan ini (opsional)..."
+                />
+                <MarkdownEditor
+                  label="DESKRIPSI PRESTASI (ID)"
+                  rows={3}
+                  value={newAch.description_id}
+                  onChange={(val) => setNewAch({ ...newAch, description_id: val })}
+                  placeholder="Ceritakan tentang penghargaan ini (opsional)..."
+                />
+              </div>
+
+              {/* Link ke Project (Opsional) */}
+              <div>
+                <label className="block text-xs font-mono font-bold mb-1">
+                  HUBUNGKAN DENGAN PROYEK TERKAIT (OPSIONAL)
+                </label>
+                <select
+                  value={newAch.project_id}
+                  onChange={(e) => setNewAch({ ...newAch, project_id: e.target.value })}
+                  className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white"
+                >
+                  <option value="">-- Tidak Terhubung ke Proyek Tertentu (Mandiri) --</option>
+                  {projects.map((proj) => (
+                    <option key={proj.id} value={proj.id}>
+                      {proj.title}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-[10px] text-gray-500 font-mono mt-0.5 block">
+                  Jika prestasi/sertifikat ini didapat dari hasil pengerjaan proyek tertentu, pilih proyek di atas.
+                </span>
+              </div>
+
               <div>
                 <label className="block text-xs font-mono font-bold mb-1">LINK KREDENSIAL / WEBSITE PENYELENGGARA (OPSIONAL)</label>
                 <input
@@ -1218,6 +1244,11 @@ export default function AdminDashboardPage() {
                   <div>
                     <span className="font-black text-sm uppercase">{ach.title_id}</span>
                     <span className="text-xs text-[#635BFF] dark:text-[#9D93FF] font-bold block">{ach.issuer}</span>
+                    {ach.project && (
+                      <span className="inline-block mt-1 px-2 py-0.5 bg-[#E2FF00] text-black text-[10px] font-mono font-bold border border-black rounded">
+                        PROYEK: {ach.project.title}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <button

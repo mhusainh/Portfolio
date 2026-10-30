@@ -4,6 +4,7 @@ import React from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { GraduationCap, Calendar, Award } from "lucide-react";
 import { NeoStamp } from "@/components/NeoBrutalAssets";
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 
 export interface EducationItem {
   id: string;
@@ -77,9 +78,9 @@ export function EducationSection({ education }: { education: EducationItem[] }) 
                 </h4>
 
                 {desc && (
-                  <p className="text-sm text-black/85 dark:text-[#FFFFFF]/85 leading-relaxed mb-4">
-                    {desc}
-                  </p>
+                  <div className="text-sm text-black/85 dark:text-[#FFFFFF]/85 leading-relaxed mb-4">
+                    <MarkdownRenderer content={desc} />
+                  </div>
                 )}
               </div>
 

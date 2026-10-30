@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useLanguage } from "@/context/LanguageContext";
 import { X, ExternalLink, Code2, ChevronRight, ChevronLeft, Calendar } from "lucide-react";
 import { NeoStamp, getTechColor } from "@/components/NeoBrutalAssets";
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 
 export interface ProjectItem {
   id: string;
@@ -117,9 +118,9 @@ export function ProjectSection({
                   <h3 className="text-xl font-black uppercase text-black dark:text-[#FFFFFF] tracking-tight mb-2">
                     {proj.title}
                   </h3>
-                  <p className="text-sm text-black/90 dark:text-[#FFFFFF]/90 line-clamp-3 leading-relaxed mb-4">
-                    {desc}
-                  </p>
+                  <div className="text-sm text-black/90 dark:text-[#FFFFFF]/90 line-clamp-3 leading-relaxed mb-4">
+                    <MarkdownRenderer content={desc} />
+                  </div>
                 </div>
 
                 <div>
@@ -258,9 +259,11 @@ export function ProjectSection({
                 <h3 className="text-2xl md:text-3xl font-black uppercase text-black dark:text-[#FFFFFF] mb-2">
                   {selectedProject.title}
                 </h3>
-                <p className="text-base text-black/90 dark:text-[#FFFFFF]/90 leading-relaxed mb-4">
-                  {locale === "en" ? selectedProject.description_en : selectedProject.description_id}
-                </p>
+                <div className="text-base text-black/90 dark:text-[#FFFFFF]/90 leading-relaxed mb-4">
+                  <MarkdownRenderer
+                    content={locale === "en" ? selectedProject.description_en : selectedProject.description_id}
+                  />
+                </div>
 
                 {/* Tech Badges in Modal with Consistent Palette */}
                 <div className="flex flex-wrap gap-2 mb-6">
