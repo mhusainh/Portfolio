@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Profile {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName      String    @map("full_name") @db.VarChar(255)
+  title_en      String    @db.VarChar(255)
+  title_id      String    @db.VarChar(255)
+  bio_en        String
+  bio_id        String
+  what_i_do_en  String[]  @default([])
+  what_i_do_id  String[]  @default([])
+  avatar_url    String?
+  resume_url    String?
+  email         String?   @map("email") @db.VarChar(255)
+  linkedin_url  String?   @db.VarChar(255)
+  github_url    String?   @db.VarChar(255)
+  instagram_url String?   @db.VarChar(255)
+  updatedAt     DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("profile")
+}
+
+model Education {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  institution    String    @map("institution") @db.VarChar(255)
+  degreeEn       String    @map("degree_en") @db.VarChar(255)
+  degreeId       String    @map("degree_id") @db.VarChar(255)
+  fieldOfStudyEn String    @map("field_of_study_en") @db.VarChar(255)
+  fieldOfStudyId String    @map("field_of_study_id") @db.VarChar(255)
+  descriptionEn  String?   @map("description_en")
+  descriptionId  String?   @map("description_id")
+  logoUrl        String?   @map("logo_url")
+  startDate      DateTime  @map("start_date") @db.Date
+  endDate        DateTime? @map("end_date") @db.Date
+  isCurrent      Boolean?  @default(false) @map("is_current")
+  scoreGpa       String?   @map("score_gpa") @db.VarChar(50)
+  createdAt      DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("education")
+}
+
+model Skill {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String          @unique @map("name") @db.VarChar(100)
+  category          skill_category? @default(other) @map("category")
+  icon_type         String          @db.VarChar(50)
+  iconUrl           String          @map("icon_url")
+  proficiency_level String?         @db.VarChar(50)
+  display_order     Int?            @default(0)
+  createdAt         DateTime?       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("skills")
+}
+
+model Project {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  experience_id   String?      @db.Uuid
+  title           String       @map("title") @db.VarChar(255)
+  slug            String       @unique @map("slug") @db.VarChar(255)
+  description_en  String
+  description_id  String
+  cover_image_url String
+  gallery_urls    String[]     @default([])
+  technologies    String[]     @default([])
+  project_url     String?
+  repository_url  String?
+  isFeatured      Boolean?     @default(false) @map("is_featured")
+  createdAt       DateTime?    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime?    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  experiences     experiences? @relation(fields: [experience_id], references: [id], onUpdate: NoAction)
+
+  @@map("projects")
+}
+
+model experiences {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type              experience_type
+  organization_name String          @db.VarChar(255)
+  role_en           String          @db.VarChar(255)
+  role_id           String          @db.VarChar(255)
+  description_en    String
+  description_id    String
+  logo_url          String?
+  media_urls        String[]        @default([])
+  start_date        DateTime        @db.Date
+  end_date          DateTime?       @db.Date
+  is_current        Boolean?        @default(false)
+  location          String?         @db.VarChar(255)
+  technologies      String[]        @default([])
+  created_at        DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?       @default(now()) @db.Timestamptz(6)
+  projects          Project[]
+}
+
+model achievements {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title_en        String    @db.VarChar(255)
+  title_id        String    @db.VarChar(255)
+  issuer          String    @db.VarChar(255)
+  issue_date      DateTime  @db.Date
+  description_en  String?
+  description_id  String?
+  certificate_url String?
+  credential_url  String?
+  is_featured     Boolean?  @default(true)
+  display_order   Int?      @default(0)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model admin_users {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username      String    @unique @db.VarChar(100)
+  password_hash String    @db.VarChar(255)
+  name          String?   @db.VarChar(255)
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+enum ExperienceType {
+  internship
+  working
+  freelance
+  organization
+  committee
+}
+
+enum SkillCategory {
+  programming
+  framework
+  tools_office
+  database
+  design
+  other
+}
+
+enum experience_type {
+  internship
+  working
+  freelance
+  organization
+  committee
+}
+
+enum skill_category {
+  programming
+  framework
+  tools_office
+  database
+  design
+  other
+}

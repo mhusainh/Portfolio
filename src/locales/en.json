@@ -1,0 +1,72 @@
+{
+  "nav": {
+    "about": "About",
+    "experience": "Experience",
+    "projects": "Projects",
+    "achievements": "Achievements",
+    "education": "Education",
+    "whatIDo": "What I Do",
+    "skills": "Skills",
+    "contact": "Contact"
+  },
+  "hero": {
+    "greeting": "Hello, I am",
+    "resume": "Resume",
+    "contactMe": "Let's Talk",
+    "exploreWork": "Explore Work",
+    "status": "Available for Projects"
+  },
+  "experience": {
+    "title": "EXPERIENCE & ORGANIZATIONS",
+    "subtitle": "Track record of professional work, internships, organizations, and leadership.",
+    "all": "All",
+    "working": "Work",
+    "internship": "Internship",
+    "freelance": "Freelance",
+    "organization": "Organization",
+    "committee": "Committee",
+    "current": "Present",
+    "deliveredProjects": "Delivered Projects:"
+  },
+  "projects": {
+    "title": "FEATURED PROJECTS",
+    "subtitle": "Proof of engineering capability, real solutions, and architecture.",
+    "viewProject": "View Details",
+    "liveDemo": "Live Demo",
+    "sourceCode": "Source Code",
+    "close": "Close Preview",
+    "gallery": "Project Gallery",
+    "linkedRole": "Developed during role at:"
+  },
+  "achievements": {
+    "title": "HONORS & ACHIEVEMENTS",
+    "subtitle": "Recognitions, competition awards, and verified technical achievements.",
+    "viewCredential": "View Credential",
+    "issuer": "Issued by"
+  },
+  "education": {
+    "title": "EDUCATION & ACADEMICS",
+    "subtitle": "Formal academic background and certifications."
+  },
+  "whatIDo": {
+    "title": "WHAT I DO",
+    "subtitle": "Core competencies and architectural solutions I provide."
+  },
+  "skills": {
+    "title": "TECHNICAL SKILLS & TOOLS",
+    "subtitle": "Programming languages, frameworks, databases, and business tools.",
+    "all": "All",
+    "programming": "Programming",
+    "framework": "Frameworks",
+    "database": "Databases",
+    "tools_office": "Office & Tools"
+  },
+  "footer": {
+    "heading": "LET'S CONNECT",
+    "subheading": "Open for full-time opportunities, engineering contracts, and technical discussions.",
+    "emailLabel": "Send Email",
+    "copyEmail": "Copy Email",
+    "copied": "Copied!",
+    "rights": "All rights reserved."
+  }
+}

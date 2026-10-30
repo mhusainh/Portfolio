@@ -1,0 +1,72 @@
+{
+  "nav": {
+    "about": "Tentang",
+    "experience": "Pengalaman",
+    "projects": "Proyek",
+    "achievements": "Prestasi",
+    "education": "Pendidikan",
+    "whatIDo": "Keahlian",
+    "skills": "Keterampilan",
+    "contact": "Kontak"
+  },
+  "hero": {
+    "greeting": "Halo, saya",
+    "resume": "Resume",
+    "contactMe": "Mari Bicara",
+    "exploreWork": "Lihat Portofolio",
+    "status": "Siap Untuk Proyek Baru"
+  },
+  "experience": {
+    "title": "PENGALAMAN & ORGANISASI",
+    "subtitle": "Jejak riwayat profesional, magang, organisasi, dan kepanitiaan.",
+    "all": "Semua",
+    "working": "Kerja",
+    "internship": "Magang",
+    "freelance": "Freelance",
+    "organization": "Organisasi",
+    "committee": "Kepanitiaan",
+    "current": "Sekarang",
+    "deliveredProjects": "Proyek yang Diselesaikan:"
+  },
+  "projects": {
+    "title": "PROYEK UNGGULAN",
+    "subtitle": "Bukti nyata kompetensi rekayasa perangkat lunak dan arsitektur sistem.",
+    "viewProject": "Lihat Detail",
+    "liveDemo": "Demo Langsung",
+    "sourceCode": "Kode Sumber",
+    "close": "Tutup Preview",
+    "gallery": "Galeri Dokumentasi",
+    "linkedRole": "Dikerjakan saat peran di:"
+  },
+  "achievements": {
+    "title": "PRESTASI & PENGHARGAAN",
+    "subtitle": "Pencapaian kompetisi, sertifikasi keahlian, dan penghargaan teknis terverifikasi.",
+    "viewCredential": "Lihat Sertifikat",
+    "issuer": "Diberikan oleh"
+  },
+  "education": {
+    "title": "RIWAYAT PENDIDIKAN",
+    "subtitle": "Latar belakang akademik formal dan sertifikasi keahlian."
+  },
+  "whatIDo": {
+    "title": "FOKUS KEAHLIAN",
+    "subtitle": "Spesialisasi teknis dan solusi perangkat lunak yang saya kuasai."
+  },
+  "skills": {
+    "title": "SKILL & PERANGKAT KERJA",
+    "subtitle": "Bahasa pemrograman, framework, basis data, dan aplikasi kantor.",
+    "all": "Semua",
+    "programming": "Pemrograman",
+    "framework": "Framework",
+    "database": "Basis Data",
+    "tools_office": "Aplikasi Kantor"
+  },
+  "footer": {
+    "heading": "MARI TERHUBUNG",
+    "subheading": "Terbuka untuk peluang kerja penuh waktu, kontrak teknis, maupun diskusi rekayasa.",
+    "emailLabel": "Kirim Email",
+    "copyEmail": "Salin Email",
+    "copied": "Tersalin!",
+    "rights": "Hak cipta dilindungi."
+  }
+}
