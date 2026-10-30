@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import cloudinary from "@/lib/cloudinary";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const profile = await prisma.profile.findFirst({
