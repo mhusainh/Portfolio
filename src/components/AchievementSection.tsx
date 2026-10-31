@@ -103,7 +103,7 @@ export function AchievementSection({ achievements }: { achievements: Achievement
                 </h4>
 
                 {desc && (
-                  <div className="text-sm text-black/85 dark:text-[#FFFFFF]/85 leading-relaxed mb-4">
+                  <div className="text-sm text-black/85 dark:text-[#FFFFFF]/85 leading-relaxed mb-4 overflow-hidden break-words">
                     <MarkdownRenderer content={desc} />
                   </div>
                 )}

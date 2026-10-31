@@ -69,7 +69,11 @@ export function ProjectSection({
   }, [selectedProject]);
 
   const allPhotos = selectedProject
-    ? [selectedProject.cover_image_url, ...(selectedProject.gallery_urls || [])]
+    ? Array.from(
+        new Set(
+          [selectedProject.cover_image_url, ...(selectedProject.gallery_urls || [])].filter(Boolean)
+        )
+      )
     : [];
 
   return (
@@ -126,8 +130,8 @@ export function ProjectSection({
                   <h3 className="text-xl font-black uppercase text-black dark:text-[#FFFFFF] tracking-tight mb-2">
                     {proj.title}
                   </h3>
-                  <div className="text-sm text-black/90 dark:text-[#FFFFFF]/90 line-clamp-3 leading-relaxed mb-4">
-                    <MarkdownRenderer content={desc} />
+                  <div className="text-sm text-black/90 dark:text-[#FFFFFF]/90 leading-relaxed mb-4">
+                    <MarkdownRenderer content={desc} clamp={5} />
                   </div>
                 </div>
 

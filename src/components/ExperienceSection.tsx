@@ -137,7 +137,7 @@ export function ExperienceSection({ experiences, onSelectProject }: ExperienceSe
                   </div>
                 </div>
 
-                <div className="text-sm md:text-base text-black/90 dark:text-[#FFFFFF]/90 leading-relaxed mb-4">
+                <div className="text-sm md:text-base text-black/90 dark:text-[#FFFFFF]/90 leading-relaxed mb-4 overflow-hidden break-words">
                   <MarkdownRenderer content={desc} />
                 </div>
 

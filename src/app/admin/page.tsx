@@ -446,6 +446,8 @@ export default function AdminDashboardPage() {
     degreeId: "",
     fieldOfStudyEn: "",
     fieldOfStudyId: "",
+    descriptionEn: "",
+    descriptionId: "",
     startDate: new Date().toISOString().split("T")[0],
     scoreGpa: "",
   });
@@ -458,6 +460,8 @@ export default function AdminDashboardPage() {
       degreeId: edu.degreeId,
       fieldOfStudyEn: edu.fieldOfStudyEn || edu.fieldOfStudyId,
       fieldOfStudyId: edu.fieldOfStudyId,
+      descriptionEn: edu.descriptionEn || "",
+      descriptionId: edu.descriptionId || "",
       startDate: edu.startDate ? edu.startDate.split("T")[0] : "",
       scoreGpa: edu.scoreGpa || "",
     });
@@ -472,6 +476,8 @@ export default function AdminDashboardPage() {
       degreeId: "",
       fieldOfStudyEn: "",
       fieldOfStudyId: "",
+      descriptionEn: "",
+      descriptionId: "",
       startDate: new Date().toISOString().split("T")[0],
       scoreGpa: "",
     });
@@ -1594,6 +1600,24 @@ export default function AdminDashboardPage() {
                     className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white"
                   />
                 </div>
+              </div>
+
+              {/* Deskripsi Pendidikan Markdown ID & EN */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <MarkdownEditor
+                  label="DESKRIPSI PENDIDIKAN (EN)"
+                  rows={3}
+                  value={newEdu.descriptionEn}
+                  onChange={(val) => setNewEdu({ ...newEdu, descriptionEn: val })}
+                  placeholder="Aktivitas, konsentrasi studi, atau pencapaian akademik (opsional)..."
+                />
+                <MarkdownEditor
+                  label="DESKRIPSI PENDIDIKAN (ID)"
+                  rows={3}
+                  value={newEdu.descriptionId}
+                  onChange={(val) => setNewEdu({ ...newEdu, descriptionId: val })}
+                  placeholder="Aktivitas, konsentrasi studi, atau pencapaian akademik (opsional)..."
+                />
               </div>
 
               <div className="flex gap-2">

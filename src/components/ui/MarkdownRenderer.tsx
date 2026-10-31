@@ -3,9 +3,10 @@ import React from "react";
 interface MarkdownRendererProps {
   content?: string | null;
   className?: string;
+  clamp?: number; // optional line clamp (e.g. 3)
 }
 
-export function MarkdownRenderer({ content, className = "" }: MarkdownRendererProps) {
+export function MarkdownRenderer({ content, className = "", clamp }: MarkdownRendererProps) {
   if (!content || !content.trim()) return null;
 
   // Split into paragraphs by double linebreaks (standard Markdown)
@@ -27,7 +28,7 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
       // Check for headers
       if (trimmedPara.startsWith("### ")) {
         nodes.push(
-          <h4 key={`h3-${pIdx}`} className="font-black uppercase text-base mt-3 mb-1">
+          <h4 key={`h3-${pIdx}`} className="font-black uppercase text-base mt-3 mb-1 break-words">
             {renderFormattedInline(trimmedPara.slice(4))}
           </h4>
         );
@@ -35,7 +36,7 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
       }
       if (trimmedPara.startsWith("## ")) {
         nodes.push(
-          <h3 key={`h2-${pIdx}`} className="font-black uppercase text-lg mt-3 mb-1.5">
+          <h3 key={`h2-${pIdx}`} className="font-black uppercase text-lg mt-3 mb-1.5 break-words">
             {renderFormattedInline(trimmedPara.slice(3))}
           </h3>
         );
@@ -43,7 +44,7 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
       }
       if (trimmedPara.startsWith("# ")) {
         nodes.push(
-          <h2 key={`h1-${pIdx}`} className="font-black uppercase text-xl mt-4 mb-2">
+          <h2 key={`h1-${pIdx}`} className="font-black uppercase text-xl mt-4 mb-2 break-words">
             {renderFormattedInline(trimmedPara.slice(2))}
           </h2>
         );
@@ -51,7 +52,7 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
       }
       if (trimmedPara.startsWith("> ")) {
         nodes.push(
-          <blockquote key={`quote-${pIdx}`} className="border-l-2 border-[#635BFF] dark:border-[#9D93FF] pl-3 italic my-2 text-sm opacity-90">
+          <blockquote key={`quote-${pIdx}`} className="border-l-2 border-[#635BFF] dark:border-[#9D93FF] pl-3 italic my-2 text-sm opacity-90 break-words">
             {renderFormattedInline(trimmedPara.slice(2))}
           </blockquote>
         );
@@ -64,7 +65,7 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
       nodes.push(
         <p
           key={`p-${pIdx}`}
-          className="leading-relaxed my-1.5 text-justify [text-justify:inter-word]"
+          className="leading-relaxed my-1.5 text-justify [text-justify:inter-word] break-words [overflow-wrap:anywhere]"
         >
           {renderFormattedInline(joinedParagraphText)}
         </p>
@@ -84,9 +85,9 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
 
       if (num) {
         return (
-          <ol key={`${key}-ol`} className="list-decimal pl-5 space-y-1 my-2 font-inherit">
+          <ol key={`${key}-ol`} className="list-decimal pl-5 space-y-1 my-2 font-inherit break-words [overflow-wrap:anywhere]">
             {items.map((it, idx) => (
-              <li key={idx} className="leading-relaxed font-inherit">
+              <li key={idx} className="leading-relaxed font-inherit break-words [overflow-wrap:anywhere]">
                 {renderFormattedInline(it)}
               </li>
             ))}
@@ -95,9 +96,9 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
       }
 
       return (
-        <ul key={`${key}-ul`} className="list-disc pl-5 space-y-1 my-2 font-inherit">
+        <ul key={`${key}-ul`} className="list-disc pl-5 space-y-1 my-2 font-inherit break-words [overflow-wrap:anywhere]">
           {items.map((it, idx) => (
-            <li key={idx} className="leading-relaxed font-inherit">
+            <li key={idx} className="leading-relaxed font-inherit break-words [overflow-wrap:anywhere]">
               {renderFormattedInline(it)}
             </li>
           ))}
@@ -134,7 +135,7 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
       if (flushed) nodes.push(flushed);
       if (trimmedLine) {
         nodes.push(
-          <p key={`p${pIdx}-text-${lIdx}`} className="leading-relaxed my-1 text-justify [text-justify:inter-word]">
+          <p key={`p${pIdx}-text-${lIdx}`} className="leading-relaxed my-1 text-justify [text-justify:inter-word] break-words [overflow-wrap:anywhere]">
             {renderFormattedInline(trimmedLine)}
           </p>
         );
@@ -145,7 +146,23 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
     if (finalFlushed) nodes.push(finalFlushed);
   });
 
-  return <div className={`space-y-1.5 ${className}`}>{nodes}</div>;
+  const clampStyle: React.CSSProperties = clamp
+    ? {
+        display: "-webkit-box",
+        WebkitLineClamp: clamp,
+        WebkitBoxOrient: "vertical",
+        overflow: "hidden",
+      }
+    : {};
+
+  return (
+    <div
+      style={clampStyle}
+      className={`space-y-1.5 break-words [overflow-wrap:anywhere] max-w-full ${className}`}
+    >
+      {nodes}
+    </div>
+  );
 }
 
 /**
