@@ -156,7 +156,8 @@ export default function AdminDashboardPage() {
     description_en: "",
     description_id: "",
     start_date: new Date().toISOString().split("T")[0],
-    is_current: true,
+    end_date: "",
+    is_current: false,
     location: "",
     technologies: "",
   });
@@ -171,6 +172,7 @@ export default function AdminDashboardPage() {
       description_en: exp.description_en,
       description_id: exp.description_id,
       start_date: exp.start_date ? exp.start_date.split("T")[0] : "",
+      end_date: exp.end_date ? exp.end_date.split("T")[0] : "",
       is_current: Boolean(exp.is_current),
       location: exp.location || "",
       technologies: Array.isArray(exp.technologies) ? exp.technologies.join(", ") : "",
@@ -188,7 +190,8 @@ export default function AdminDashboardPage() {
       description_en: "",
       description_id: "",
       start_date: new Date().toISOString().split("T")[0],
-      is_current: true,
+      end_date: "",
+      is_current: false,
       location: "",
       technologies: "",
     });
@@ -449,6 +452,8 @@ export default function AdminDashboardPage() {
     descriptionEn: "",
     descriptionId: "",
     startDate: new Date().toISOString().split("T")[0],
+    endDate: "",
+    isCurrent: false,
     scoreGpa: "",
   });
 
@@ -463,6 +468,8 @@ export default function AdminDashboardPage() {
       descriptionEn: edu.descriptionEn || "",
       descriptionId: edu.descriptionId || "",
       startDate: edu.startDate ? edu.startDate.split("T")[0] : "",
+      endDate: edu.endDate ? edu.endDate.split("T")[0] : "",
+      isCurrent: Boolean(edu.isCurrent),
       scoreGpa: edu.scoreGpa || "",
     });
     window.scrollTo({ top: 120, behavior: "smooth" });
@@ -479,6 +486,8 @@ export default function AdminDashboardPage() {
       descriptionEn: "",
       descriptionId: "",
       startDate: new Date().toISOString().split("T")[0],
+      endDate: "",
+      isCurrent: false,
       scoreGpa: "",
     });
   };
@@ -809,6 +818,44 @@ export default function AdminDashboardPage() {
                     onChange={(e) => setNewExp({ ...newExp, role_id: e.target.value })}
                     className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white"
                   />
+                </div>
+              </div>
+
+              {/* Tanggal Masuk & Tanggal Keluar */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end p-3 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-lg">
+                <div>
+                  <label className="block text-xs font-mono font-bold mb-1">TANGGAL MASUK / MULAI</label>
+                  <input
+                    type="date"
+                    required
+                    value={newExp.start_date}
+                    onChange={(e) => setNewExp({ ...newExp, start_date: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-bold mb-1">TANGGAL KELUAR / SELESAI</label>
+                  <input
+                    type="date"
+                    disabled={newExp.is_current}
+                    value={newExp.end_date}
+                    onChange={(e) => setNewExp({ ...newExp, end_date: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white disabled:opacity-40"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 pb-2">
+                  <input
+                    type="checkbox"
+                    id="exp_is_current"
+                    checked={newExp.is_current}
+                    onChange={(e) => setNewExp({ ...newExp, is_current: e.target.checked, end_date: e.target.checked ? "" : newExp.end_date })}
+                    className="w-4 h-4 accent-[#635BFF]"
+                  />
+                  <label htmlFor="exp_is_current" className="text-xs font-mono font-bold cursor-pointer">
+                    Masih Aktif / Sekarang
+                  </label>
                 </div>
               </div>
 
@@ -1599,6 +1646,44 @@ export default function AdminDashboardPage() {
                     placeholder="Sistem Informasi"
                     className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white"
                   />
+                </div>
+              </div>
+
+              {/* Tanggal Masuk & Tanggal Lulus/Keluar */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end p-3 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-lg">
+                <div>
+                  <label className="block text-xs font-mono font-bold mb-1">TANGGAL MASUK / MULAI</label>
+                  <input
+                    type="date"
+                    required
+                    value={newEdu.startDate}
+                    onChange={(e) => setNewEdu({ ...newEdu, startDate: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-bold mb-1">TANGGAL LULUS / KELUAR</label>
+                  <input
+                    type="date"
+                    disabled={newEdu.isCurrent}
+                    value={newEdu.endDate}
+                    onChange={(e) => setNewEdu({ ...newEdu, endDate: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white disabled:opacity-40"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 pb-2">
+                  <input
+                    type="checkbox"
+                    id="edu_is_current"
+                    checked={newEdu.isCurrent}
+                    onChange={(e) => setNewEdu({ ...newEdu, isCurrent: e.target.checked, endDate: e.target.checked ? "" : newEdu.endDate })}
+                    className="w-4 h-4 accent-[#E2FF00]"
+                  />
+                  <label htmlFor="edu_is_current" className="text-xs font-mono font-bold cursor-pointer">
+                    Masih Menempuh Studi (Aktif)
+                  </label>
                 </div>
               </div>
 
