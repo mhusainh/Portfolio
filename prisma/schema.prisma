@@ -42,9 +42,10 @@ model Education {
   endDate        DateTime? @map("end_date") @db.Date
   isCurrent      Boolean?  @default(false) @map("is_current")
   scoreGpa       String?   @map("score_gpa") @db.VarChar(50)
+  display_order  Int?      @default(0)
   createdAt      DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  @@index([isCurrent(sort: Desc), startDate(sort: Desc)], map: "idx_education_dates")
+  @@index([display_order, isCurrent(sort: Desc), startDate(sort: Desc)], map: "idx_education_dates")
   @@map("education")
 }
 
@@ -75,12 +76,13 @@ model Project {
   project_url     String?
   repository_url  String?
   isFeatured      Boolean?     @default(false) @map("is_featured")
+  display_order   Int?         @default(0)
   createdAt       DateTime?    @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime?    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   experiences     experiences? @relation(fields: [experience_id], references: [id], onUpdate: NoAction)
   achievements    achievements[]
 
-  @@index([createdAt(sort: Desc)], map: "idx_projects_created_at")
+  @@index([display_order, createdAt(sort: Desc)], map: "idx_projects_created_at")
   @@index([experience_id], map: "idx_projects_experience_id")
   @@map("projects")
 }
@@ -100,11 +102,12 @@ model experiences {
   is_current        Boolean?        @default(false)
   location          String?         @db.VarChar(255)
   technologies      String[]        @default([])
+  display_order     Int?            @default(0)
   created_at        DateTime?       @default(now()) @db.Timestamptz(6)
   updated_at        DateTime?       @default(now()) @db.Timestamptz(6)
   projects          Project[]
 
-  @@index([is_current(sort: Desc), start_date(sort: Desc)], map: "idx_experiences_dates")
+  @@index([display_order, is_current(sort: Desc), start_date(sort: Desc)], map: "idx_experiences_dates")
 }
 
 model achievements {

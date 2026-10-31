@@ -31,7 +31,7 @@ export async function GET(request: Request) {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ display_order: "asc" }, { createdAt: "desc" }],
     });
 
     return NextResponse.json(projectsList);

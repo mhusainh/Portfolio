@@ -21,7 +21,7 @@ export async function GET(request: Request) {
           },
         },
       },
-      orderBy: [{ is_current: "desc" }, { start_date: "desc" }],
+      orderBy: [{ display_order: "asc" }, { is_current: "desc" }, { start_date: "desc" }],
     });
 
     return NextResponse.json(experiencesList);

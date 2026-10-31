@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   ExternalLink,
   Star,
+  GripVertical,
 } from "lucide-react";
 
 type Tab = "profile" | "experiences" | "projects" | "achievements" | "skills" | "education";
@@ -89,6 +90,49 @@ export default function AdminDashboardPage() {
   const flashMessage = (msg: string) => {
     setSaveStatus(msg);
     setTimeout(() => setSaveStatus(null), 3000);
+  };
+
+  // Drag and drop reordering handler
+  const [draggedItemIdx, setDraggedItemIdx] = useState<number | null>(null);
+
+  const handleReorder = async (
+    entity: "skills" | "projects" | "experiences" | "achievements" | "education",
+    sourceIdx: number,
+    targetIdx: number
+  ) => {
+    if (sourceIdx === targetIdx) return;
+
+    let updatedList: any[] = [];
+    if (entity === "skills") updatedList = [...skills];
+    else if (entity === "projects") updatedList = [...projects];
+    else if (entity === "experiences") updatedList = [...experiences];
+    else if (entity === "achievements") updatedList = [...achievements];
+    else if (entity === "education") updatedList = [...education];
+
+    const [moved] = updatedList.splice(sourceIdx, 1);
+    updatedList.splice(targetIdx, 0, moved);
+
+    // Update local state immediately for snappy UX
+    if (entity === "skills") setSkills(updatedList);
+    else if (entity === "projects") setProjects(updatedList);
+    else if (entity === "experiences") setExperiences(updatedList);
+    else if (entity === "achievements") setAchievements(updatedList);
+    else if (entity === "education") setEducation(updatedList);
+
+    // Persist to database
+    try {
+      const itemsPayload = updatedList.map((item, idx) => ({ id: item.id, display_order: idx }));
+      const res = await fetch("/api/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entity, items: itemsPayload }),
+      });
+      if (res.ok) {
+        flashMessage("Urutan berhasil diperbarui & disimpan!");
+      }
+    } catch (e) {
+      console.error("Reorder save error:", e);
+    }
   };
 
   // 1. Profile Handlers
@@ -191,15 +235,15 @@ export default function AdminDashboardPage() {
     project_url: "",
     repository_url: "",
     experience_id: "",
-    achievement_ids: [] as string[],
+    achievement_id: "",
     isFeatured: true,
   });
 
   const handleStartEditProj = (proj: any) => {
     setEditingProjId(proj.id);
-    const linkedAchIds = Array.isArray(proj.achievements)
-      ? proj.achievements.map((a: any) => a.id)
-      : achievements.filter((a: any) => a.project_id === proj.id).map((a: any) => a.id);
+    const linkedAch = Array.isArray(proj.achievements) && proj.achievements.length > 0
+      ? proj.achievements[0].id
+      : achievements.find((a: any) => a.project_id === proj.id)?.id || "";
 
     setNewProj({
       title: proj.title,
@@ -212,7 +256,7 @@ export default function AdminDashboardPage() {
       project_url: proj.project_url || "",
       repository_url: proj.repository_url || "",
       experience_id: proj.experience_id || "",
-      achievement_ids: linkedAchIds,
+      achievement_id: linkedAch,
       isFeatured: Boolean(proj.isFeatured),
     });
     window.scrollTo({ top: 120, behavior: "smooth" });
@@ -231,7 +275,7 @@ export default function AdminDashboardPage() {
       project_url: "",
       repository_url: "",
       experience_id: "",
-      achievement_ids: [],
+      achievement_id: "",
       isFeatured: true,
     });
   };
@@ -812,15 +856,37 @@ export default function AdminDashboardPage() {
 
             {/* List */}
             <div className="flex flex-col gap-3">
-              <h3 className="text-base font-black uppercase font-mono">DAFTAR PENGALAMAN TERSIMPAN ({experiences.length})</h3>
-              {experiences.map((exp) => (
-                <div key={exp.id} className="p-4 bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-xl shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF] flex items-center justify-between gap-3">
-                  <div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 bg-[#9D93FF] text-black font-bold border border-black uppercase mr-2 rounded-sm">
-                      {exp.type}
-                    </span>
-                    <span className="font-black text-sm uppercase">{exp.role_id}</span>
-                    <span className="text-xs text-[#FF6B35] font-bold block">{exp.organization_name}</span>
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-black uppercase font-mono">
+                  DAFTAR PENGALAMAN TERSIMPAN ({experiences.length})
+                </h3>
+                <span className="text-xs text-gray-500 font-mono flex items-center gap-1">
+                  <GripVertical className="w-3.5 h-3.5" /> Drag & drop baris untuk mengubah urutan
+                </span>
+              </div>
+              {experiences.map((exp, idx) => (
+                <div
+                  key={exp.id}
+                  draggable
+                  onDragStart={() => setDraggedItemIdx(idx)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => {
+                    if (draggedItemIdx !== null) {
+                      handleReorder("experiences", draggedItemIdx, idx);
+                      setDraggedItemIdx(null);
+                    }
+                  }}
+                  className="p-4 bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-xl shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF] flex items-center justify-between gap-3 cursor-grab active:cursor-grabbing hover:border-[#635BFF] transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <GripVertical className="w-5 h-5 text-gray-400 hover:text-black dark:hover:text-white" />
+                    <div>
+                      <span className="text-[10px] font-mono px-2 py-0.5 bg-[#9D93FF] text-black font-bold border border-black uppercase mr-2 rounded-sm">
+                        {exp.type}
+                      </span>
+                      <span className="font-black text-sm uppercase">{exp.role_id}</span>
+                      <span className="text-xs text-[#FF6B35] font-bold block">{exp.organization_name}</span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -864,7 +930,7 @@ export default function AdminDashboardPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-xs font-mono font-bold mb-1">JUDUL PROYEK</label>
                   <input
@@ -888,7 +954,7 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold mb-1">TERKAIT PENGALAMAN MANA? (OPSIONAL)</label>
+                  <label className="block text-xs font-mono font-bold mb-1">TERKAIT PENGALAMAN (OPSIONAL)</label>
                   <select
                     value={newProj.experience_id}
                     onChange={(e) => setNewProj({ ...newProj, experience_id: e.target.value })}
@@ -898,6 +964,22 @@ export default function AdminDashboardPage() {
                     {experiences.map((exp) => (
                       <option key={exp.id} value={exp.id}>
                         {exp.organization_name} ({exp.role_id})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-bold mb-1">PRESTASI/SERTIFIKAT (OPSIONAL)</label>
+                  <select
+                    value={newProj.achievement_id}
+                    onChange={(e) => setNewProj({ ...newProj, achievement_id: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono font-bold text-black dark:text-white"
+                  >
+                    <option value="">-- Tanpa Prestasi / Sertifikat --</option>
+                    {achievements.map((ach) => (
+                      <option key={ach.id} value={ach.id}>
+                        {ach.title_id || ach.title_en} ({ach.issuer})
                       </option>
                     ))}
                   </select>
@@ -1028,55 +1110,6 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* Hubungkan dengan Prestasi / Sertifikat yang sudah ada (Opsional) */}
-              <div className="p-4 bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-lg flex flex-col gap-2">
-                <label className="block text-xs font-mono font-bold uppercase text-black dark:text-white">
-                  🏆 HUBUNGKAN PRESTASI / SERTIFIKAT TERKAIT PROYEK INI (OPSIONAL)
-                </label>
-                <p className="text-[11px] text-gray-600 dark:text-gray-300 font-mono">
-                  Pilih sertifikat / penghargaan yang kamu dapatkan dari hasil pengerjaan proyek ini:
-                </p>
-                {achievements.length === 0 ? (
-                  <span className="text-xs italic text-gray-400">Belum ada data prestasi. Kamu bisa buat prestasi dulu di tab Prestasi & Sertifikat.</span>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
-                    {achievements.map((ach) => {
-                      const isChecked = newProj.achievement_ids.includes(ach.id);
-                      return (
-                        <label
-                          key={ach.id}
-                          className={`flex items-start gap-2.5 p-2.5 border-2 rounded-md cursor-pointer transition-colors text-xs font-mono ${
-                            isChecked
-                              ? "bg-[#E2FF00]/20 border-black dark:border-white shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF]"
-                              : "border-black/30 dark:border-white/30 hover:border-black dark:hover:border-white"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setNewProj({ ...newProj, achievement_ids: [...newProj.achievement_ids, ach.id] });
-                              } else {
-                                setNewProj({
-                                  ...newProj,
-                                  achievement_ids: newProj.achievement_ids.filter((id) => id !== ach.id),
-                                });
-                              }
-                            }}
-                            className="mt-0.5 accent-[#635BFF]"
-                          />
-                          <div>
-                            <span className="font-bold block text-black dark:text-white">{ach.title_id || ach.title_en}</span>
-                            <span className="text-[10px] text-gray-500 block">{ach.issuer}</span>
-                          </div>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
               <div className="flex gap-2">
                 <button
                   type="submit"
@@ -1100,10 +1133,30 @@ export default function AdminDashboardPage() {
 
             {/* List */}
             <div className="flex flex-col gap-3">
-              <h3 className="text-base font-black uppercase font-mono">DAFTAR PROYEK ({projects.length})</h3>
-              {projects.map((proj) => (
-                <div key={proj.id} className="p-4 bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-xl shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF] flex items-center justify-between gap-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-black uppercase font-mono">
+                  DAFTAR PROYEK ({projects.length})
+                </h3>
+                <span className="text-xs text-gray-500 font-mono flex items-center gap-1">
+                  <GripVertical className="w-3.5 h-3.5" /> Drag & drop baris untuk mengubah urutan
+                </span>
+              </div>
+              {projects.map((proj, idx) => (
+                <div
+                  key={proj.id}
+                  draggable
+                  onDragStart={() => setDraggedItemIdx(idx)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => {
+                    if (draggedItemIdx !== null) {
+                      handleReorder("projects", draggedItemIdx, idx);
+                      setDraggedItemIdx(null);
+                    }
+                  }}
+                  className="p-4 bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-xl shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF] flex items-center justify-between gap-3 cursor-grab active:cursor-grabbing hover:border-[#635BFF] transition-all"
+                >
                   <div className="flex items-center gap-3">
+                    <GripVertical className="w-5 h-5 text-gray-400 hover:text-black dark:hover:text-white" />
                     <img src={proj.cover_image_url} alt="" className="w-14 h-10 object-cover border-2 border-black dark:border-white rounded-md" />
                     <div>
                       <span className="font-black text-sm uppercase">{proj.title}</span>
@@ -1268,17 +1321,39 @@ export default function AdminDashboardPage() {
             </form>
 
             <div className="flex flex-col gap-3">
-              <h3 className="text-base font-black uppercase font-mono">DAFTAR PRESTASI ({achievements.length})</h3>
-              {achievements.map((ach) => (
-                <div key={ach.id} className="p-4 bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-xl shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF] flex items-center justify-between gap-3">
-                  <div>
-                    <span className="font-black text-sm uppercase">{ach.title_id}</span>
-                    <span className="text-xs text-[#635BFF] dark:text-[#9D93FF] font-bold block">{ach.issuer}</span>
-                    {ach.project && (
-                      <span className="inline-block mt-1 px-2 py-0.5 bg-[#E2FF00] text-black text-[10px] font-mono font-bold border border-black rounded">
-                        PROYEK: {ach.project.title}
-                      </span>
-                    )}
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-black uppercase font-mono">
+                  DAFTAR PRESTASI ({achievements.length})
+                </h3>
+                <span className="text-xs text-gray-500 font-mono flex items-center gap-1">
+                  <GripVertical className="w-3.5 h-3.5" /> Drag & drop baris untuk mengubah urutan
+                </span>
+              </div>
+              {achievements.map((ach, idx) => (
+                <div
+                  key={ach.id}
+                  draggable
+                  onDragStart={() => setDraggedItemIdx(idx)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => {
+                    if (draggedItemIdx !== null) {
+                      handleReorder("achievements", draggedItemIdx, idx);
+                      setDraggedItemIdx(null);
+                    }
+                  }}
+                  className="p-4 bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-xl shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF] flex items-center justify-between gap-3 cursor-grab active:cursor-grabbing hover:border-[#635BFF] transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <GripVertical className="w-5 h-5 text-gray-400 hover:text-black dark:hover:text-white" />
+                    <div>
+                      <span className="font-black text-sm uppercase">{ach.title_id}</span>
+                      <span className="text-xs text-[#635BFF] dark:text-[#9D93FF] font-bold block">{ach.issuer}</span>
+                      {ach.project && (
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-[#E2FF00] text-black text-[10px] font-mono font-bold border border-black rounded">
+                          PROYEK: {ach.project.title}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -1403,28 +1478,51 @@ export default function AdminDashboardPage() {
               </div>
             </form>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-              {skills.map((s) => (
-                <div key={s.id} className="p-3 bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-xl shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF] flex flex-col items-center text-center relative group neo-lift-hover">
-                  <img src={s.iconUrl} alt={s.name} className="w-8 h-8 object-contain mb-1" />
-                  <span className="font-mono font-bold text-xs">{s.name}</span>
-                  <div className="flex items-center gap-1 mt-2">
-                    <button
-                      onClick={() => handleStartEditSkill(s)}
-                      className="px-2 py-0.5 bg-[#E2FF00] text-black text-[10px] font-mono font-bold rounded border border-black"
-                    >
-                      EDIT
-                    </button>
-                    <button
-                      onClick={() => handleDeleteSkill(s.id)}
-                      className="p-1 bg-[#FF6B35] text-white rounded border border-black"
-                      title="Hapus"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-black uppercase font-mono">
+                  DAFTAR SKILL TERSIMPAN ({skills.length})
+                </h3>
+                <span className="text-xs text-gray-500 font-mono flex items-center gap-1">
+                  <GripVertical className="w-3.5 h-3.5" /> Drag & drop kartu skill untuk geser urutan
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                {skills.map((s, idx) => (
+                  <div
+                    key={s.id}
+                    draggable
+                    onDragStart={() => setDraggedItemIdx(idx)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => {
+                      if (draggedItemIdx !== null) {
+                        handleReorder("skills", draggedItemIdx, idx);
+                        setDraggedItemIdx(null);
+                      }
+                    }}
+                    className="p-3 bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-xl shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF] flex flex-col items-center text-center relative group neo-lift-hover cursor-grab active:cursor-grabbing hover:border-[#635BFF] transition-all"
+                  >
+                    <GripVertical className="w-3.5 h-3.5 text-gray-400 absolute top-2 right-2 opacity-50 group-hover:opacity-100" />
+                    <img src={s.iconUrl} alt={s.name} className="w-8 h-8 object-contain mb-1" />
+                    <span className="font-mono font-bold text-xs">{s.name}</span>
+                    <div className="flex items-center gap-1 mt-2">
+                      <button
+                        onClick={() => handleStartEditSkill(s)}
+                        className="px-2 py-0.5 bg-[#E2FF00] text-black text-[10px] font-mono font-bold rounded border border-black"
+                      >
+                        EDIT
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSkill(s.id)}
+                        className="p-1 bg-[#FF6B35] text-white rounded border border-black"
+                        title="Hapus"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -1519,12 +1617,34 @@ export default function AdminDashboardPage() {
             </form>
 
             <div className="flex flex-col gap-3">
-              <h3 className="text-base font-black uppercase font-mono">DAFTAR PENDIDIKAN ({education.length})</h3>
-              {education.map((ed) => (
-                <div key={ed.id} className="p-4 bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-xl shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF] flex items-center justify-between gap-3">
-                  <div>
-                    <span className="font-black text-sm uppercase">{ed.institution}</span>
-                    <span className="text-xs text-[#FF6B35] font-bold block">{ed.degreeId} - {ed.fieldOfStudyId}</span>
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-black uppercase font-mono">
+                  DAFTAR PENDIDIKAN ({education.length})
+                </h3>
+                <span className="text-xs text-gray-500 font-mono flex items-center gap-1">
+                  <GripVertical className="w-3.5 h-3.5" /> Drag & drop baris untuk mengubah urutan
+                </span>
+              </div>
+              {education.map((ed, idx) => (
+                <div
+                  key={ed.id}
+                  draggable
+                  onDragStart={() => setDraggedItemIdx(idx)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => {
+                    if (draggedItemIdx !== null) {
+                      handleReorder("education", draggedItemIdx, idx);
+                      setDraggedItemIdx(null);
+                    }
+                  }}
+                  className="p-4 bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-xl shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF] flex items-center justify-between gap-3 cursor-grab active:cursor-grabbing hover:border-[#635BFF] transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <GripVertical className="w-5 h-5 text-gray-400 hover:text-black dark:hover:text-white" />
+                    <div>
+                      <span className="font-black text-sm uppercase">{ed.institution}</span>
+                      <span className="text-xs text-[#FF6B35] font-bold block">{ed.degreeId} - {ed.fieldOfStudyId}</span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button

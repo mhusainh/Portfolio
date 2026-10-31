@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const educationList = await prisma.education.findMany({
-      orderBy: [{ isCurrent: "desc" }, { startDate: "desc" }],
+      orderBy: [{ display_order: "asc" }, { isCurrent: "desc" }, { startDate: "desc" }],
     });
     return NextResponse.json(educationList);
   } catch (error: unknown) {
