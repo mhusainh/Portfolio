@@ -9,11 +9,16 @@ import { GlobalBackgroundShapes } from "@/components/GlobalBackgroundShapes";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  // PRIORITY: Fetch ONLY Hero profile on the server (1 single lightweight query)
-  // Page responds immediately to browser in <100ms
-  const profile = await prisma.profile.findFirst({
-    orderBy: { updatedAt: "desc" },
-  });
+  // PRIORITY: Fetch ONLY Hero profile on the server with try/catch fallback
+  // If database connection briefly hangs or exhausts pool, page still renders cleanly!
+  let profile = null;
+  try {
+    profile = await prisma.profile.findFirst({
+      orderBy: { updatedAt: "desc" },
+    });
+  } catch (error) {
+    console.error("HomePage profile fetch error:", error);
+  }
 
   return (
     <>

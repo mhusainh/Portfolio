@@ -6,6 +6,15 @@ import { LanguageProvider } from "@/context/LanguageContext";
 export const metadata: Metadata = {
   title: "Mahmudi Husain Hasbullah | Software Developer",
   description: "Personal Portfolio of Mahmudi Husain Hasbullah - PHP & Laravel Specialist and Software Developer.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon/logo.png", type: "image/png" },
+    ],
+    apple: [
+      { url: "/favicon/logo.png" },
+    ],
+  },
 };
 
 export default function RootLayout({

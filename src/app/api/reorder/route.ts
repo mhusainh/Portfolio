@@ -42,6 +42,11 @@ export async function POST(request: Request) {
             where: { id: item.id },
             data: { display_order: order },
           });
+        case "what_i_do":
+          return prisma.what_i_do.update({
+            where: { id: item.id },
+            data: { display_order: order },
+          });
         default:
           throw new Error(`Unsupported entity: ${entity}`);
       }

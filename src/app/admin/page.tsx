@@ -13,6 +13,7 @@ import {
   Trophy,
   Cpu,
   GraduationCap,
+  Sparkles,
   LogOut,
   Plus,
   Trash2,
@@ -23,7 +24,7 @@ import {
   GripVertical,
 } from "lucide-react";
 
-type Tab = "profile" | "experiences" | "projects" | "achievements" | "skills" | "education";
+type Tab = "profile" | "experiences" | "projects" | "achievements" | "skills" | "education" | "what_i_do";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -41,6 +42,7 @@ export default function AdminDashboardPage() {
   const [achievements, setAchievements] = useState<any[]>([]);
   const [skills, setSkills] = useState<any[]>([]);
   const [education, setEducation] = useState<any[]>([]);
+  const [whatIDoList, setWhatIDoList] = useState<any[]>([]);
 
   // Check Auth & Fetch Data
   useEffect(() => {
@@ -60,13 +62,14 @@ export default function AdminDashboardPage() {
 
   const fetchAllData = async () => {
     try {
-      const [pRes, eRes, prRes, aRes, sRes, edRes] = await Promise.all([
+      const [pRes, eRes, prRes, aRes, sRes, edRes, wRes] = await Promise.all([
         fetch("/api/profile").then((r) => r.json()),
         fetch("/api/experiences").then((r) => r.json()),
         fetch("/api/projects").then((r) => r.json()),
         fetch("/api/achievements").then((r) => r.json()),
         fetch("/api/skills").then((r) => r.json()),
         fetch("/api/education").then((r) => r.json()),
+        fetch("/api/what-i-do").then((r) => r.json()),
       ]);
 
       if (pRes) setProfile(pRes);
@@ -75,6 +78,7 @@ export default function AdminDashboardPage() {
       if (Array.isArray(aRes)) setAchievements(aRes);
       if (Array.isArray(sRes)) setSkills(sRes);
       if (Array.isArray(edRes)) setEducation(edRes);
+      if (Array.isArray(wRes)) setWhatIDoList(wRes);
     } catch (err) {
       console.error("Error loading data:", err);
     }
@@ -92,11 +96,69 @@ export default function AdminDashboardPage() {
     setTimeout(() => setSaveStatus(null), 3000);
   };
 
-  // Drag and drop reordering handler
+  // Drag and drop reordering handler (Desktop HTML5 + Mobile Long Press Touch)
   const [draggedItemIdx, setDraggedItemIdx] = useState<number | null>(null);
+  const [touchActiveIdx, setTouchActiveIdx] = useState<number | null>(null);
+  const touchTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const touchStartYRef = React.useRef<number>(0);
+  const activeEntityRef = React.useRef<"skills" | "projects" | "experiences" | "achievements" | "education" | "what_i_do" | null>(null);
+
+  const handleTouchStart = (
+    entity: "skills" | "projects" | "experiences" | "achievements" | "education" | "what_i_do",
+    index: number,
+    e: React.TouchEvent
+  ) => {
+    activeEntityRef.current = entity;
+    touchStartYRef.current = e.touches[0].clientY;
+    if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+
+    // 400ms hold/long-press threshold to initiate drag mode on mobile
+    touchTimerRef.current = setTimeout(() => {
+      setTouchActiveIdx(index);
+      setDraggedItemIdx(index);
+      if (typeof window !== "undefined" && window.navigator && "vibrate" in window.navigator) {
+        try {
+          window.navigator.vibrate(50);
+        } catch (_) {}
+      }
+    }, 350);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    // If not yet activated into drag mode and user moves finger, cancel hold so normal scroll happens
+    if (touchActiveIdx === null) {
+      const diffY = Math.abs(e.touches[0].clientY - touchStartYRef.current);
+      if (diffY > 10) {
+        if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+      }
+      return;
+    }
+
+    // While dragging on touch, prevent browser default scroll
+    e.preventDefault();
+
+    const touch = e.touches[0];
+    const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+    const itemEl = targetEl?.closest("[data-reorder-index]") as HTMLElement | null;
+    if (itemEl && activeEntityRef.current) {
+      const overIdx = parseInt(itemEl.dataset.reorderIndex || "-1", 10);
+      if (overIdx >= 0 && overIdx !== touchActiveIdx) {
+        handleReorder(activeEntityRef.current, touchActiveIdx, overIdx);
+        setTouchActiveIdx(overIdx);
+        setDraggedItemIdx(overIdx);
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+    setTouchActiveIdx(null);
+    setDraggedItemIdx(null);
+    activeEntityRef.current = null;
+  };
 
   const handleReorder = async (
-    entity: "skills" | "projects" | "experiences" | "achievements" | "education",
+    entity: "skills" | "projects" | "experiences" | "achievements" | "education" | "what_i_do",
     sourceIdx: number,
     targetIdx: number
   ) => {
@@ -108,6 +170,7 @@ export default function AdminDashboardPage() {
     else if (entity === "experiences") updatedList = [...experiences];
     else if (entity === "achievements") updatedList = [...achievements];
     else if (entity === "education") updatedList = [...education];
+    else if (entity === "what_i_do") updatedList = [...whatIDoList];
 
     const [moved] = updatedList.splice(sourceIdx, 1);
     updatedList.splice(targetIdx, 0, moved);
@@ -118,6 +181,7 @@ export default function AdminDashboardPage() {
     else if (entity === "experiences") setExperiences(updatedList);
     else if (entity === "achievements") setAchievements(updatedList);
     else if (entity === "education") setEducation(updatedList);
+    else if (entity === "what_i_do") setWhatIDoList(updatedList);
 
     // Persist to database
     try {
@@ -519,6 +583,63 @@ export default function AdminDashboardPage() {
     fetchAllData();
   };
 
+  // 7. What I Do Handlers (Add & Edit)
+  const [editingWidId, setEditingWidId] = useState<string | null>(null);
+  const [newWid, setNewWid] = useState({
+    title_en: "",
+    title_id: "",
+    description_en: "",
+    description_id: "",
+  });
+
+  const handleStartEditWid = (wid: any) => {
+    setEditingWidId(wid.id);
+    setNewWid({
+      title_en: wid.title_en,
+      title_id: wid.title_id,
+      description_en: wid.description_en || "",
+      description_id: wid.description_id || "",
+    });
+    window.scrollTo({ top: 120, behavior: "smooth" });
+  };
+
+  const handleCancelEditWid = () => {
+    setEditingWidId(null);
+    setNewWid({
+      title_en: "",
+      title_id: "",
+      description_en: "",
+      description_id: "",
+    });
+  };
+
+  const handleAddWhatIDo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = {
+      ...newWid,
+      id: editingWidId || undefined,
+    };
+
+    const method = editingWidId ? "PUT" : "POST";
+    const res = await fetch("/api/what-i-do", {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+      flashMessage(editingWidId ? "Spesialisasi berhasil diperbarui!" : "Spesialisasi baru berhasil disimpan!");
+      handleCancelEditWid();
+      fetchAllData();
+    }
+  };
+
+  const handleDeleteWhatIDo = async (id: string) => {
+    if (!confirm("Hapus spesialisasi ini?")) return;
+    await fetch(`/api/what-i-do?id=${id}`, { method: "DELETE" });
+    fetchAllData();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-[#FFFFFF] dark:bg-[#000000]">
@@ -536,6 +657,7 @@ export default function AdminDashboardPage() {
 
   const tabs = [
     { key: "profile", label: "Biodata / Profile", icon: User },
+    { key: "what_i_do", label: "What I Do / Spesialisasi", icon: Sparkles },
     { key: "experiences", label: "Pengalaman & Organisasi", icon: Briefcase },
     { key: "projects", label: "Proyek & Portofolio", icon: FolderGit2 },
     { key: "achievements", label: "Prestasi & Sertifikat", icon: Trophy },
@@ -739,7 +861,135 @@ export default function AdminDashboardPage() {
           </form>
         )}
 
-        {/* TAB 2: EXPERIENCES */}
+        {/* TAB 2: WHAT I DO (SPESIALISASI) */}
+        {activeTab === "what_i_do" && (
+          <div className="flex flex-col gap-6">
+            <form onSubmit={handleAddWhatIDo} className="bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-xl p-6 shadow-[4px_4px_0px_0px_#000] dark:shadow-[4px_4px_0px_0px_#FFFFFF] flex flex-col gap-4">
+              <div className="flex items-center justify-between border-b-2 border-black dark:border-white pb-2">
+                <h3 className="text-lg font-black uppercase text-black dark:text-white">
+                  {editingWidId ? "✏️ EDIT WHAT I DO / SPESIALISASI" : "+ TAMBAH WHAT I DO / SPESIALISASI"}
+                </h3>
+                {editingWidId && (
+                  <button
+                    type="button"
+                    onClick={handleCancelEditWid}
+                    className="text-xs font-mono font-bold text-[#FF6B35] underline"
+                  >
+                    Batal Edit
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-mono font-bold mb-1">JUDUL KEAHLIAN / TITLE (EN)</label>
+                  <input
+                    type="text"
+                    required
+                    value={newWid.title_en}
+                    onChange={(e) => setNewWid({ ...newWid, title_en: e.target.value })}
+                    placeholder="misal: High-Performance RESTful APIs"
+                    className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-bold mb-1">JUDUL KEAHLIAN / TITLE (ID)</label>
+                  <input
+                    type="text"
+                    required
+                    value={newWid.title_id}
+                    onChange={(e) => setNewWid({ ...newWid, title_id: e.target.value })}
+                    placeholder="misal: Pengembangan RESTful API Berkinerja Tinggi"
+                    className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-[#635BFF] text-white font-black text-xs uppercase border-2 border-black dark:border-white rounded-lg shadow-[3px_3px_0px_0px_#000] dark:shadow-[3px_3px_0px_0px_#FFFFFF] self-start flex items-center gap-2 neo-lift-hover"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{editingWidId ? "SIMPAN PERUBAHAN" : "TAMBAH SPESIALISASI"}</span>
+                </button>
+                {editingWidId && (
+                  <button
+                    type="button"
+                    onClick={handleCancelEditWid}
+                    className="px-4 py-2.5 bg-[#FFFFFF] dark:bg-[#000000] text-black dark:text-white font-black text-xs uppercase border-2 border-black dark:border-white rounded-lg neo-lift-hover"
+                  >
+                    BATAL
+                  </button>
+                )}
+              </div>
+            </form>
+
+            {/* List */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-black uppercase font-mono">
+                  DAFTAR WHAT I DO TERSIMPAN ({whatIDoList.length})
+                </h3>
+                <span className="text-xs text-gray-500 font-mono flex items-center gap-1">
+                  <GripVertical className="w-3.5 h-3.5" /> Geser / Tahan (Hold) di HP untuk atur urutan
+                </span>
+              </div>
+              {whatIDoList.map((wid, idx) => (
+                <div
+                  key={wid.id}
+                  data-reorder-index={idx}
+                  draggable
+                  onDragStart={() => setDraggedItemIdx(idx)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => {
+                    if (draggedItemIdx !== null) {
+                      handleReorder("what_i_do", draggedItemIdx, idx);
+                      setDraggedItemIdx(null);
+                    }
+                  }}
+                  onTouchStart={(e) => handleTouchStart("what_i_do", idx, e)}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  className={`p-4 bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-xl shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF] flex items-center justify-between gap-3 cursor-grab active:cursor-grabbing hover:border-[#635BFF] transition-all select-none ${
+                    touchActiveIdx === idx ? "ring-2 ring-[#635BFF] scale-[1.02] shadow-[4px_4px_0px_0px_#635BFF] z-20" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <GripVertical className="w-5 h-5 text-gray-400 hover:text-black dark:hover:text-white" />
+                    <div>
+                      <span className="font-mono font-black text-sm uppercase block text-black dark:text-white">
+                        0{idx + 1}. {wid.title_id || wid.title_en}
+                      </span>
+                      {wid.title_en && wid.title_id && (
+                        <span className="text-xs font-mono text-gray-500 block">EN: {wid.title_en}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleStartEditWid(wid)}
+                      className="px-3 py-1.5 bg-[#E2FF00] text-black font-mono font-bold text-xs uppercase border-2 border-black rounded-md shadow-[2px_2px_0px_0px_#000] neo-lift-hover"
+                      title="Edit"
+                    >
+                      EDIT
+                    </button>
+                    <button
+                      onClick={() => handleDeleteWhatIDo(wid.id)}
+                      className="p-2 bg-[#FF6B35] text-white border-2 border-black dark:border-white rounded-md shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF] neo-lift-hover"
+                      title="Hapus"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: EXPERIENCES */}
         {activeTab === "experiences" && (
           <div className="flex flex-col gap-6">
             {/* Add/Edit Form */}
@@ -914,12 +1164,13 @@ export default function AdminDashboardPage() {
                   DAFTAR PENGALAMAN TERSIMPAN ({experiences.length})
                 </h3>
                 <span className="text-xs text-gray-500 font-mono flex items-center gap-1">
-                  <GripVertical className="w-3.5 h-3.5" /> Drag & drop baris untuk mengubah urutan
+                  <GripVertical className="w-3.5 h-3.5" /> Geser / Tahan (Hold) di HP untuk atur urutan
                 </span>
               </div>
               {experiences.map((exp, idx) => (
                 <div
                   key={exp.id}
+                  data-reorder-index={idx}
                   draggable
                   onDragStart={() => setDraggedItemIdx(idx)}
                   onDragOver={(e) => e.preventDefault()}
@@ -929,7 +1180,12 @@ export default function AdminDashboardPage() {
                       setDraggedItemIdx(null);
                     }
                   }}
-                  className="p-4 bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-xl shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF] flex items-center justify-between gap-3 cursor-grab active:cursor-grabbing hover:border-[#635BFF] transition-all"
+                  onTouchStart={(e) => handleTouchStart("experiences", idx, e)}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  className={`p-4 bg-[#FFFFFF] dark:bg-[#000000] border-2 border-black dark:border-white rounded-xl shadow-[2px_2px_0px_0px_#000] dark:shadow-[2px_2px_0px_0px_#FFFFFF] flex items-center justify-between gap-3 cursor-grab active:cursor-grabbing hover:border-[#635BFF] transition-all select-none ${
+                    touchActiveIdx === idx ? "ring-2 ring-[#635BFF] scale-[1.02] shadow-[4px_4px_0px_0px_#635BFF] z-20" : ""
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <GripVertical className="w-5 h-5 text-gray-400 hover:text-black dark:hover:text-white" />

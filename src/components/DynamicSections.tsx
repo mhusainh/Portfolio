@@ -5,7 +5,7 @@ import { ExperienceSection, ExperienceItem } from "@/components/ExperienceSectio
 import { ProjectSection, ProjectItem } from "@/components/ProjectSection";
 import { AchievementSection, AchievementItem } from "@/components/AchievementSection";
 import { EducationSection, EducationItem } from "@/components/EducationSection";
-import { WhatIDoSection } from "@/components/WhatIDoSection";
+import { WhatIDoSection, WhatIDoItem } from "@/components/WhatIDoSection";
 import { SkillSection, SkillItem } from "@/components/SkillSection";
 import { SectionSkeleton } from "@/components/SectionSkeleton";
 import { ScrollReveal } from "@/components/ScrollReveal";
@@ -23,6 +23,7 @@ export function DynamicSections({
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [achievements, setAchievements] = useState<AchievementItem[]>([]);
   const [education, setEducation] = useState<EducationItem[]>([]);
+  const [whatIDoEntries, setWhatIDoEntries] = useState<WhatIDoItem[]>([]);
   const [skills, setSkills] = useState<SkillItem[]>([]);
 
   const [loadingExp, setLoadingExp] = useState(true);
@@ -68,11 +69,15 @@ export function DynamicSections({
         setLoadingAch(false);
       }
 
-      // 4. Fourth priority: Education
+      // 4. Fourth priority: Education & What I Do
       try {
         const resEdu = await fetch("/api/education");
         const dataEdu = await resEdu.json();
         if (Array.isArray(dataEdu)) setEducation(dataEdu);
+
+        const resWid = await fetch("/api/what-i-do");
+        const dataWid = await resWid.json();
+        if (Array.isArray(dataWid)) setWhatIDoEntries(dataWid);
       } catch (e) {
         console.error("Education load error:", e);
       } finally {
@@ -142,7 +147,11 @@ export function DynamicSections({
 
           {/* What I Do Section: Triggered right after Education finishes */}
           <ScrollReveal>
-            <WhatIDoSection itemsEn={whatIDoEn} itemsId={whatIDoId} />
+            <WhatIDoSection
+              itemsEn={whatIDoEn}
+              itemsId={whatIDoId}
+              entries={whatIDoEntries}
+            />
           </ScrollReveal>
         </>
       )}
