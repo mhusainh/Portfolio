@@ -49,7 +49,7 @@ export function Hero({ profile }: HeroProps) {
           </div>
 
           {/* Bio Paragraph (Justified) */}
-          <div className="text-base md:text-lg text-black/90 dark:text-[#FFFFFF]/90 max-w-[65ch] leading-relaxed border-l-4 border-[#635BFF] dark:border-[#9D93FF] pl-4 py-1 text-justify">
+          <div className="text-base md:text-lg text-black/90 dark:text-[#FFFFFF]/90 max-w-[65ch] leading-relaxed border-l-4 border-[#635BFF] dark:border-[#9D93FF] pl-4 py-1 text-justify [text-justify:inter-word]">
             <MarkdownRenderer
               content={bio || "Dedicated software developer building clean, scalable backend systems and high-craft web applications."}
             />

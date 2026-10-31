@@ -8,131 +8,144 @@ interface MarkdownRendererProps {
 export function MarkdownRenderer({ content, className = "" }: MarkdownRendererProps) {
   if (!content || !content.trim()) return null;
 
-  // Split lines
-  const lines = content.split("\n");
+  // Split into paragraphs by double linebreaks (standard Markdown)
+  // while preserving single linebreaks within lists or code
+  const rawParagraphs = content.split(/\n\s*\n/);
   const nodes: React.ReactNode[] = [];
 
-  let currentListItems: string[] = [];
-  let isNumberedList = false;
+  rawParagraphs.forEach((para, pIdx) => {
+    const trimmedPara = para.trim();
+    if (!trimmedPara) return;
 
-  const flushList = (keyPrefix: string) => {
-    if (currentListItems.length === 0) return null;
-    const items = [...currentListItems];
-    const numbered = isNumberedList;
-    currentListItems = [];
-    isNumberedList = false;
+    // Split lines inside this paragraph block
+    const lines = trimmedPara.split("\n");
 
-    if (numbered) {
+    // Check if entire block is a list
+    const isList = lines.some((l) => /^[-*•]\s+/.test(l.trim()) || /^\d+[.)]\s+/.test(l.trim()));
+
+    if (!isList) {
+      // Check for headers
+      if (trimmedPara.startsWith("### ")) {
+        nodes.push(
+          <h4 key={`h3-${pIdx}`} className="font-black uppercase text-base mt-3 mb-1">
+            {renderFormattedInline(trimmedPara.slice(4))}
+          </h4>
+        );
+        return;
+      }
+      if (trimmedPara.startsWith("## ")) {
+        nodes.push(
+          <h3 key={`h2-${pIdx}`} className="font-black uppercase text-lg mt-3 mb-1.5">
+            {renderFormattedInline(trimmedPara.slice(3))}
+          </h3>
+        );
+        return;
+      }
+      if (trimmedPara.startsWith("# ")) {
+        nodes.push(
+          <h2 key={`h1-${pIdx}`} className="font-black uppercase text-xl mt-4 mb-2">
+            {renderFormattedInline(trimmedPara.slice(2))}
+          </h2>
+        );
+        return;
+      }
+      if (trimmedPara.startsWith("> ")) {
+        nodes.push(
+          <blockquote key={`quote-${pIdx}`} className="border-l-2 border-[#635BFF] dark:border-[#9D93FF] pl-3 italic my-2 text-sm opacity-90">
+            {renderFormattedInline(trimmedPara.slice(2))}
+          </blockquote>
+        );
+        return;
+      }
+
+      // Regular paragraph: join soft linebreaks with a space so it forms one flowing block
+      // This allows CSS text-justify to wrap and justify lines naturally!
+      const joinedParagraphText = lines.map((l) => l.trim()).join(" ");
+      nodes.push(
+        <p
+          key={`p-${pIdx}`}
+          className="leading-relaxed my-1.5 text-justify [text-justify:inter-word]"
+        >
+          {renderFormattedInline(joinedParagraphText)}
+        </p>
+      );
+      return;
+    }
+
+    // It's a list block
+    let currentListItems: string[] = [];
+    let isNumbered = false;
+
+    const flushCurrentList = (key: string) => {
+      if (currentListItems.length === 0) return null;
+      const items = [...currentListItems];
+      const num = isNumbered;
+      currentListItems = [];
+
+      if (num) {
+        return (
+          <ol key={`${key}-ol`} className="list-decimal pl-5 space-y-1 my-2 font-inherit">
+            {items.map((it, idx) => (
+              <li key={idx} className="leading-relaxed font-inherit">
+                {renderFormattedInline(it)}
+              </li>
+            ))}
+          </ol>
+        );
+      }
+
       return (
-        <ol key={`${keyPrefix}-ol`} className="list-decimal pl-5 space-y-1 my-2 font-sans text-sm md:text-base">
-          {items.map((item, idx) => (
-            <li key={idx} className="leading-relaxed">
-              {renderFormattedInline(item)}
+        <ul key={`${key}-ul`} className="list-disc pl-5 space-y-1 my-2 font-inherit">
+          {items.map((it, idx) => (
+            <li key={idx} className="leading-relaxed font-inherit">
+              {renderFormattedInline(it)}
             </li>
           ))}
-        </ol>
+        </ul>
       );
-    }
+    };
 
-    return (
-      <ul key={`${keyPrefix}-ul`} className="list-disc pl-5 space-y-1 my-2 font-sans text-sm md:text-base">
-        {items.map((item, idx) => (
-          <li key={idx} className="leading-relaxed">
-            {renderFormattedInline(item)}
-          </li>
-        ))}
-      </ul>
-    );
-  };
+    lines.forEach((line, lIdx) => {
+      const trimmedLine = line.trim();
+      const bulletMatch = trimmedLine.match(/^[-*•]\s+(.+)$/);
+      if (bulletMatch) {
+        if (isNumbered) {
+          const flushed = flushCurrentList(`p${pIdx}-l${lIdx}-sw`);
+          if (flushed) nodes.push(flushed);
+        }
+        isNumbered = false;
+        currentListItems.push(bulletMatch[1]);
+        return;
+      }
 
-  for (let i = 0; i < lines.length; i++) {
-    const rawLine = lines[i];
-    const trimmed = rawLine.trim();
+      const numberMatch = trimmedLine.match(/^\d+[.)]\s+(.+)$/);
+      if (numberMatch) {
+        if (!isNumbered && currentListItems.length > 0) {
+          const flushed = flushCurrentList(`p${pIdx}-l${lIdx}-sw`);
+          if (flushed) nodes.push(flushed);
+        }
+        isNumbered = true;
+        currentListItems.push(numberMatch[1]);
+        return;
+      }
 
-    // Empty line -> flush list and skip or make small space
-    if (!trimmed) {
-      const flushed = flushList(`line-${i}`);
+      // Non-list line within list block
+      const flushed = flushCurrentList(`p${pIdx}-l${lIdx}`);
       if (flushed) nodes.push(flushed);
-      continue;
-    }
-
-    // Unordered bullet list: starts with '- ' or '* ' or '• '
-    const bulletMatch = trimmed.match(/^[-*•]\s+(.+)$/);
-    if (bulletMatch) {
-      if (isNumberedList) {
-        const flushed = flushList(`line-${i}-sw`);
-        if (flushed) nodes.push(flushed);
+      if (trimmedLine) {
+        nodes.push(
+          <p key={`p${pIdx}-text-${lIdx}`} className="leading-relaxed my-1 text-justify [text-justify:inter-word]">
+            {renderFormattedInline(trimmedLine)}
+          </p>
+        );
       }
-      isNumberedList = false;
-      currentListItems.push(bulletMatch[1]);
-      continue;
-    }
+    });
 
-    // Numbered list: starts with '1. ', '2. ', etc.
-    const numberMatch = trimmed.match(/^\d+[.)]\s+(.+)$/);
-    if (numberMatch) {
-      if (!isNumberedList && currentListItems.length > 0) {
-        const flushed = flushList(`line-${i}-sw`);
-        if (flushed) nodes.push(flushed);
-      }
-      isNumberedList = true;
-      currentListItems.push(numberMatch[1]);
-      continue;
-    }
+    const finalFlushed = flushCurrentList(`p${pIdx}-end`);
+    if (finalFlushed) nodes.push(finalFlushed);
+  });
 
-    // Flush any pending list before regular elements
-    const flushed = flushList(`line-${i}-pre`);
-    if (flushed) nodes.push(flushed);
-
-    // Headers
-    if (trimmed.startsWith("### ")) {
-      nodes.push(
-        <h4 key={`h3-${i}`} className="font-black uppercase text-base mt-3 mb-1">
-          {renderFormattedInline(trimmed.slice(4))}
-        </h4>
-      );
-      continue;
-    }
-    if (trimmed.startsWith("## ")) {
-      nodes.push(
-        <h3 key={`h2-${i}`} className="font-black uppercase text-lg mt-3 mb-1.5">
-          {renderFormattedInline(trimmed.slice(3))}
-        </h3>
-      );
-      continue;
-    }
-    if (trimmed.startsWith("# ")) {
-      nodes.push(
-        <h2 key={`h1-${i}`} className="font-black uppercase text-xl mt-4 mb-2">
-          {renderFormattedInline(trimmed.slice(2))}
-        </h2>
-      );
-      continue;
-    }
-
-    // Blockquote: starts with '> '
-    if (trimmed.startsWith("> ")) {
-      nodes.push(
-        <blockquote key={`quote-${i}`} className="border-l-2 border-[#635BFF] dark:border-[#9D93FF] pl-3 italic my-2 text-sm opacity-90">
-          {renderFormattedInline(trimmed.slice(2))}
-        </blockquote>
-      );
-      continue;
-    }
-
-    // Regular paragraph
-    nodes.push(
-      <p key={`p-${i}`} className="leading-relaxed my-1">
-        {renderFormattedInline(trimmed)}
-      </p>
-    );
-  }
-
-  // Final flush if ended with list
-  const finalFlushed = flushList("line-end");
-  if (finalFlushed) nodes.push(finalFlushed);
-
-  return <div className={`space-y-1.5 text-justify ${className}`}>{nodes}</div>;
+  return <div className={`space-y-1.5 ${className}`}>{nodes}</div>;
 }
 
 /**

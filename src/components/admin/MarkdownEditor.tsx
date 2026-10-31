@@ -154,9 +154,9 @@ export function MarkdownEditor({
           className="w-full px-3 py-2 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-b-md text-xs font-mono text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-[#635BFF] transition-all"
         />
       ) : (
-        <div className="w-full min-h-[100px] p-3 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white overflow-y-auto">
+        <div className="w-full min-h-[100px] p-3 bg-white dark:bg-[#000000] border-2 border-black dark:border-white rounded-md text-xs font-mono text-black dark:text-white overflow-y-auto font-mono">
           {value.trim() ? (
-            <MarkdownRenderer content={value} />
+            <MarkdownRenderer content={value} className="font-mono text-xs" />
           ) : (
             <span className="text-gray-400 italic">Belum ada konten untuk ditampilkan di preview.</span>
           )}
