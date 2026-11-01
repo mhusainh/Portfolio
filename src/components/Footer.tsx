@@ -30,6 +30,13 @@ export function Footer({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const formatUrl = (rawUrl?: string | null) => {
+    if (!rawUrl || !rawUrl.trim()) return "";
+    const trimmed = rawUrl.trim();
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `https://${trimmed}`;
+  };
+
   return (
     <footer
       id="contact"
@@ -88,7 +95,7 @@ export function Footer({
             <div className="flex flex-col gap-2.5">
               {linkedinUrl && (
                 <a
-                  href={linkedinUrl}
+                  href={formatUrl(linkedinUrl)}
                   target="_blank"
                   rel="noreferrer"
                   className="group p-3 bg-[#FFFFFF] dark:bg-[#000000] text-black dark:text-[#FFFFFF] border-2 border-black dark:border-white rounded-lg shadow-[3px_3px_0px_0px_#000] dark:shadow-[3px_3px_0px_0px_#FFFFFF] font-black text-xs uppercase tracking-wider flex items-center justify-between hover:bg-[#635BFF] hover:text-white dark:hover:bg-[#635BFF] dark:hover:text-white neo-lift-hover"
@@ -103,7 +110,7 @@ export function Footer({
 
               {githubUrl && (
                 <a
-                  href={githubUrl}
+                  href={formatUrl(githubUrl)}
                   target="_blank"
                   rel="noreferrer"
                   className="p-3 bg-[#FFFFFF] dark:bg-[#000000] text-black dark:text-[#FFFFFF] border-2 border-black dark:border-white rounded-lg shadow-[3px_3px_0px_0px_#000] dark:shadow-[3px_3px_0px_0px_#FFFFFF] font-black text-xs uppercase tracking-wider flex items-center justify-between hover:bg-[#E2FF00] hover:text-black dark:hover:bg-[#E2FF00] dark:hover:text-black neo-lift-hover"
@@ -117,7 +124,7 @@ export function Footer({
 
               {instagramUrl && (
                 <a
-                  href={instagramUrl}
+                  href={formatUrl(instagramUrl)}
                   target="_blank"
                   rel="noreferrer"
                   className="group p-3 bg-[#FFFFFF] dark:bg-[#000000] text-black dark:text-[#FFFFFF] border-2 border-black dark:border-white rounded-lg shadow-[3px_3px_0px_0px_#000] dark:shadow-[3px_3px_0px_0px_#FFFFFF] font-black text-xs uppercase tracking-wider flex items-center justify-between hover:bg-[#FF6B35] hover:text-white dark:hover:bg-[#FF6B35] dark:hover:text-white neo-lift-hover"
